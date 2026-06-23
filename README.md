@@ -1,76 +1,63 @@
 # 🎓 Praktikum Tracker
 
-Ein lokaler Ferialpraktikum-Tracker für HTL-Schüler – entwickelt von einem HTL-Donaustadt-Schüler.  
-Локальный трекер заявок на практику для учеников HTL – сделан учеником HTL Donaustadt.
+A lightweight, offline-first Ferialpraktikum tracker built by an HTL Donaustadt student — for HTL students.  
+No server. No account. No install. Just one HTML file.
 
 ---
 
 ## ✨ Features
 
-- **Firmen verwalten** · Компании с контактными Daten (Sайт, Telefon, E-Mail, Ansprechperson)
-- **KI-Autofill** · ИИ сам ищет контактные данные через Groq API (бесплатно)
-- **Bewerbungsstatus** · Статус заявки: Nicht gesendet → Gesendet → Antwort → Interview → Angenommen / Abgelehnt
-- **Prioritäten** · Приоритет A / B / C, отметка «нет открытой позиции»
-- **Beruf / Fachrichtung** · Профессия указывается при добавлении — ИИ ищет именно под эту специальность
-- **3 Sprachen** · Deutsch 🇦🇹 · Русский 🇷🇺 · English 🇬🇧
-- **Автосохранение на диск** · File System Access API (Chrome / Edge)
-- **Export / Import** · JSON-Backup jederzeit möglich
-- **100% lokal** · Keine Server, keine Cloud — alles im Browser
+- **Company list** — website, phone, email, contact person, address
+- **AI autofill** — Groq AI searches contact details automatically based on company name + your profession
+- **Application status** — Not sent → Sent → Response → Interview → Accepted / Rejected
+- **Priority system** — A / B / C + mark companies with no open positions
+- **Profession field** — specify your field (e.g. Electrical Engineering, IT) so the AI searches the right contacts
+- **3 languages** — Deutsch 🇦🇹 · Русский 🇷🇺 · English 🇬🇧
+- **Auto-save to disk** — File System Access API (Chrome / Edge)
+- **Export / Import** — JSON backup anytime
+- **Rate limit display** — see remaining AI requests directly in the UI
+- **100% local** — no server, no cloud, everything stays in your browser
 
 ---
 
-## 🚀 Setup (1 Minute)
+## 🚀 Quick Start
 
-1. **Datei herunterladen** – `praktikum-tracker.html` runterladen
-2. **Doppelklick** – direkt im Browser öffnen (Chrome oder Edge empfohlen)
-3. **Sprache wählen** – DE / RU / EN
-4. **Groq API-Key eingeben** – kostenlos unter [console.groq.com/keys](https://console.groq.com/keys) (kein Kreditkarte nötig)
-5. **Loslegen!**
+1. Open the link (or download `praktikum-tracker.html` and double-click it)
+2. Choose your language
+3. Get a free Groq API key at [console.groq.com/keys](https://console.groq.com/keys) — no credit card needed
+4. Paste the key and click Start
+5. Add your first company
 
-> ⚠️ Репозиторий должен быть **Private** — в приложении хранится логика ввода API-ключа.
-
----
-
-## 🤖 KI / ИИ (Groq API)
-
-Das App nutzt **Groq** (kostenloser Tier) für die KI-Datensuche.
-
-- Modell: `compound-beta-mini` (mit Websuche) → Fallback auf `llama-3.3-70b`
-- Jeder Nutzer gibt seinen **eigenen** API-Key ein → bleibt nur auf seinem Gerät
-- Tageslimit sichtbar direkt im Interface
+> Each person uses their **own** API key. Keys never leave your device.
 
 ---
 
-## 📁 Struktur
+## 🤖 AI / Groq
 
-```
-praktikum-tracker.html   ← die ganze App (eine einzige Datei)
-README.md
-```
-
-Alles in einer HTML-Datei – kein Build-System, kein npm, kein Server.
+- Model: `compound-beta-mini` (with live web search) → fallback to `llama-3.3-70b`
+- The AI uses your **profession** to find the right internship contact at each company
+- Daily request limit shown live in the app
+- Free tier is enough for normal use
 
 ---
 
-## 🛠 Technik
+## 💾 Data & Storage
 
-| Was | Wie |
-|-----|-----|
-| Speicherung | `localStorage` (Browser) |
-| Autosave auf Disk | File System Access API + IndexedDB |
-| KI | Groq REST API (fetch) |
-| Sprachen | Eingebautes i18n-Objekt (DE/RU/EN) |
-| Styling | Vanilla CSS, Custom Properties |
-| Framework | Kein Framework – Vanilla JS |
+| What | How |
+|------|-----|
+| Company list | `localStorage` (browser) |
+| Auto-save to disk | File System Access API + IndexedDB (Chrome/Edge only) |
+| API key | `localStorage` — stays on your device only |
+| Sync | Export/Import JSON manually |
 
 ---
 
-## 📸 Screenshot
+## 🛠 Tech
 
-> *(Hier Screenshot einfügen nach dem ersten Start)*
+Vanilla HTML + CSS + JS. Single file. No framework, no build step, no dependencies.
 
 ---
 
-## 📄 Lizenz
+## 📄 License
 
-Privates Schulprojekt – HTL Donaustadt Wien · Ferialpraktikum 2025
+Private school project · HTL Donaustadt Wien · Ferialpraktikum
