@@ -334,17 +334,29 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
     <h2 id="setTitle"></h2>
 
     <p class="set-sec" id="setSecAcc"></p>
+
+    <!-- GitHub row -->
     <div class="set-row">
-      <div class="set-lbl"><b id="setLblGh"></b><small id="setLblGhSub"></small></div>
+      <div class="set-lbl">
+        <b id="setLblGh"></b>
+        <small id="setGhStatus" style="display:flex;align-items:center;gap:5px;margin-top:3px;"></small>
+      </div>
       <div class="set-btns">
         <button class="btn-ghost bar-btn" id="setGhBtn"></button>
-        <button class="btn-ghost bar-btn" id="setGhDis" hidden style="color:var(--danger);border-color:var(--danger);"></button>
+        <button class="btn-ghost bar-btn" id="setGhDis" hidden style="color:var(--danger);border-color:var(--danger);font-size:11px;"></button>
       </div>
     </div>
+
+    <!-- Groq key row -->
     <div class="set-row">
-      <div class="set-lbl"><b id="setLblGroq"></b><small id="setLblGroqSub"></small></div>
+      <div class="set-lbl">
+        <b id="setLblGroq"></b>
+        <small id="setGroqStatus" style="font-family:monospace;font-size:11px;color:var(--faint);margin-top:2px;display:block;"></small>
+      </div>
       <button class="btn-ghost bar-btn" id="setGroqBtn"></button>
     </div>
+
+    <!-- Language -->
     <div class="set-row">
       <div class="set-lbl"><b id="setLblLang"></b></div>
       <div class="set-btns">
@@ -355,15 +367,28 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
     </div>
 
     <p class="set-sec" id="setSecSync"></p>
+
+    <!-- Sync now -->
     <div class="set-row" id="setSyncNowRow" hidden>
       <div class="set-lbl"><b id="setLblSyncNow"></b><small id="setLblSyncNowSub"></small></div>
       <button class="btn-ghost bar-btn" id="setSyncNowBtn"></button>
     </div>
 
     <p class="set-sec" id="setSecStore"></p>
+
+    <!-- Autosave -->
     <div class="set-row">
       <div class="set-lbl"><b id="setLblAs"></b><small id="setLblAsSub"></small></div>
       <button class="btn-ghost bar-btn" id="setAsBtn"></button>
+    </div>
+
+    <!-- Download / share link -->
+    <div class="set-row">
+      <div class="set-lbl">
+        <b id="setLblShare"></b>
+        <small id="setShareUrl" style="font-size:11px;color:var(--faint);word-break:break-all;display:block;margin-top:2px;"></small>
+      </div>
+      <button class="btn-ghost bar-btn" id="setShareBtn" style="flex-shrink:0;"></button>
     </div>
 
     <div class="m-actions"><button class="btn-prim" id="setCloseBtn"></button></div>
@@ -770,9 +795,34 @@ function si(id,v,html){const el=document.getElementById(id);if(el){if(html)el.in
 function renderSettings(){
   const ghBtn=document.getElementById("setGhBtn"),ghDis=document.getElementById("setGhDis");
   const syncRow=document.getElementById("setSyncNowRow");
+  const ghStatus=document.getElementById("setGhStatus");
+  const groqStatus=document.getElementById("setGroqStatus");
+  const shareUrl=document.getElementById("setShareUrl");
+
+  // GitHub status
   if(ghBtn)ghBtn.textContent=ghPat?t("btnGhChg"):t("btnGhCon");
-  if(ghDis)ghDis.hidden=!ghPat;
+  if(ghDis){ghDis.hidden=!ghPat;ghDis.textContent=t("btnGhDis");}
   if(syncRow)syncRow.hidden=!ghPat;
+  if(ghStatus){
+    if(ghPat&&syncState==="ok") ghStatus.innerHTML=`<span style="color:var(--s4)">● </span><span style="color:var(--s4);font-size:11px;">${t("syncOk",{t:syncTs?new Date(syncTs).toLocaleTimeString():"—"})}</span>`;
+    else if(ghPat&&syncState==="spin") ghStatus.innerHTML=`<span style="color:var(--s3)">● </span><span style="color:var(--s3);font-size:11px;">${t("syncing")}</span>`;
+    else if(ghPat&&syncState==="err") ghStatus.innerHTML=`<span style="color:var(--danger)">● </span><span style="color:var(--danger);font-size:11px;">${t("syncE")}</span>`;
+    else if(ghPat) ghStatus.innerHTML=`<span style="color:var(--faint);font-size:11px;">${gistId?"Gist: "+gistId.slice(0,8)+"…":t("syncing")}</span>`;
+    else ghStatus.innerHTML=`<span style="color:var(--faint);font-size:11px;">${t("syncNone")}</span>`;
+  }
+
+  // Groq key masked
+  if(groqStatus)groqStatus.textContent=groqKey?groqKey.slice(0,8)+"…"+groqKey.slice(-4):"—";
+
+  // Download page link
+  const dlBase=window.location.href.includes("github.io")
+    ? window.location.href.replace(/\/[^/]*$/, "/download.html")
+    : "download.html";
+  if(shareUrl)shareUrl.textContent=dlBase;
+  const shareBtn=document.getElementById("setShareBtn");
+  if(shareBtn)shareBtn.textContent={"de":"Kopieren","ru":"Копировать","en":"Copy"}[lang]||"Copy";
+
+  // Autosave
   const asBtn=document.getElementById("setAsBtn");
   if(asBtn)asBtn.textContent=asState==="connected"?t("asChg"):asState==="needs-permission"?t("asPerm"):t("asCon");
   document.querySelectorAll(".lbtn").forEach(b=>b.classList.toggle("al",b.dataset.l===lang));
@@ -787,10 +837,11 @@ function applyI18n(){
   si("lblEmail",t("email"));si("lblAddr",t("addr"));si("lblNotes",t("notes"));
   si("aiFillLbl",t("aiFill"));si("aiDisc",t("aiDisc"));si("addCancelBtn",t("cancel"));si("addSaveBtn",t("save"));
   si("setTitle",t("setTitle"));si("setSecAcc",t("secAcc"));si("setSecSync",t("secSync"));si("setSecStore",t("secStore"));
-  si("setLblGh",t("lGh"));si("setLblGhSub",t("lGhSub"));si("setLblGroq",t("lGroq"));si("setLblGroqSub",t("lGroqSub"));
+  si("setLblGh",t("lGh"));si("setLblGroq",t("lGroq"));
   si("setLblLang",t("lLang"));si("setLblAs",t("lAs"));si("setLblAsSub",t("lAsSub"));
   si("setLblSyncNow",t("lSyncNow"));si("setLblSyncNowSub",t("lSyncNowSub"));
   si("setSyncNowBtn",t("btnSyncNow"));si("setCloseBtn",t("btnClose"));
+  si("setLblShare",{"de":"📲 Download-Seite","ru":"📲 Страница скачивания","en":"📲 Download Page"}[lang]||"📲 Download Page");
   renderSettings();renderAs();renderSyncBar();renderRl();
 }
 
@@ -1052,6 +1103,12 @@ function wireEvents(){
     if(k&&k.trim().length>5){groqKey=k.trim();localStorage.setItem(SK_GROQ,groqKey);if(ghPat&&gistId)pushGist();}
   });
   document.getElementById("setSyncNowBtn").addEventListener("click",()=>pullGist());
+  document.getElementById("setShareBtn").addEventListener("click",async()=>{
+    const url=document.getElementById("setShareUrl").textContent;
+    try{await navigator.clipboard.writeText(url);document.getElementById("setShareBtn").textContent="✓";}
+    catch(e){prompt("Copy this link:",url);}
+    setTimeout(()=>renderSettings(),1500);
+  });
   document.getElementById("setAsBtn").addEventListener("click",async()=>{
     if(asState==="connected"||asState==="disconnected")await connectFile();
     else if(asState==="needs-permission")await permitFile();
