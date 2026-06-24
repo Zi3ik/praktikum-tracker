@@ -291,6 +291,11 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
   <div class="frow" id="filterRow"></div>
   <div class="frow" id="prioRow"></div>
   <div class="search-row"><input class="search-inp" id="searchInp" type="text"></div>
+  <div class="search-row">
+    <span style="font-size:16px;flex:none;line-height:34px;">📍</span>
+    <input class="search-inp" id="addrInp" type="text" style="flex:1;">
+    <button class="btn-ghost" id="addrClearBtn" hidden style="font-size:11px;padding:7px 9px;">✕</button>
+  </div>
 
   <main class="list" id="cardList"></main>
   <p class="empty" id="emptyState" hidden></p>
@@ -456,7 +461,7 @@ const I18N={
 de:{
   appSub:"HTL Donaustadt · Ferialpraktikum",
   add:"+ Firma",exp:"Export",imp:"Import",
-  sentOf:"von {{t}} gesendet",sPh:"Firma suchen…",all:"Alle",
+  sentOf:"von {{t}} gesendet",sPh:"Firma suchen…",addrPh:"Adresse / Bezirk… z.B. Wien 22, 1220",all:"Alle",
   st:["Nicht gesendet","Gesendet","Antwort","Interview","Angenommen","Abgelehnt"],
   det:"Details",col:"Schließen",save:"Speichern",del:"🗑",
   addTitle:"Neue Firma",name:"Firmenname",prof:"Beruf / Fachrichtung",profPh:"z.B. Elektrotechnik",
@@ -512,7 +517,7 @@ de:{
 ru:{
   appSub:"HTL Donaustadt · Трекер практики",
   add:"+ Компания",exp:"Экспорт",imp:"Импорт",
-  sentOf:"из {{t}} отправлено",sPh:"Поиск…",all:"Все",
+  sentOf:"из {{t}} отправлено",sPh:"Поиск…",addrPh:"Адрес / район… напр. Wien 22, 1220",all:"Все",
   st:["Не отправлено","Отправлено","Ответ","Собеседование","Принято","Отказ"],
   det:"Подробнее",col:"Свернуть",save:"Сохранить",del:"🗑",
   addTitle:"Новая компания",name:"Название",prof:"Профессия",profPh:"напр. Elektrotechnik",
@@ -568,7 +573,7 @@ ru:{
 en:{
   appSub:"HTL Donaustadt · Ferialpraktikum",
   add:"+ Company",exp:"Export",imp:"Import",
-  sentOf:"of {{t}} sent",sPh:"Search…",all:"All",
+  sentOf:"of {{t}} sent",sPh:"Search…",addrPh:"Address / district… e.g. Wien 22, 1220",all:"All",
   st:["Not sent","Sent","Response","Interview","Accepted","Rejected"],
   det:"Details",col:"Collapse",save:"Save",del:"🗑",
   addTitle:"New Company",name:"Company name",prof:"Profession / field",profPh:"e.g. Electrical Eng.",
@@ -636,7 +641,7 @@ let groqKey=localStorage.getItem(SK_GROQ)||"";
 let ghPat=localStorage.getItem(SK_PAT)||"";
 let gistId=localStorage.getItem(SK_GIST)||"";
 let syncTs=parseInt(localStorage.getItem(SK_STS)||"0");
-let activeFilter="all",activePrios=new Set(),searchTerm="",expandedId=null;
+let activeFilter="all",activePrios=new Set(),searchTerm="",addressTerm="",expandedId=null;
 let fileHandle=null,asState="disconnected",rlCache={},syncState="none";
 
 function t(k,v={}){let s=I18N[lang][k]||I18N.en[k]||k;Object.entries(v).forEach(([a,b])=>s=s.replace(`{{${a}}}`,b));return s;}
@@ -892,7 +897,8 @@ function renderSettings(){
 
 function applyI18n(){
   si("appSub",t("appSub"));si("btnAdd",t("add"));si("btnExport",t("exp"));si("btnImport",t("imp"));
-  document.getElementById("searchInp").placeholder=t("sPh");si("footerNote",t("foot"));
+  document.getElementById("searchInp").placeholder=t("sPh");
+  document.getElementById("addrInp").placeholder=t("addrPh");si("footerNote",t("foot"));
   si("addTitle",t("addTitle"));si("lblName",t("name"));si("lblProf",t("prof"));si("lblPrio",t("prio"));
   document.getElementById("fPrioNone").textContent=t("prioN");
   si("lblSite",t("site"));si("lblPhone",t("phone"));si("lblCont",t("cont"));si("lblRole",t("role"));
@@ -928,11 +934,54 @@ function renderFilters(){
   document.getElementById("prioRow").innerHTML=ph;
 }
 
+// Vienna district → PLZ mapping + smart address match
+const WIEN_PLZ={"1":"1010","2":"1020","3":"1030","4":"1040","5":"1050","6":"1060","7":"1070","8":"1080","9":"1090","10":"1100","11":"1110","12":"1120","13":"1130","14":"1140","15":"1150","16":"1160","17":"1170","18":"1180","19":"1190","20":"1200","21":"1210","22":"1220","23":"1230"};
+const ROMAN={"i":"1","ii":"2","iii":"3","iv":"4","v":"5","vi":"6","vii":"7","viii":"8","ix":"9","x":"10","xi":"11","xii":"12","xiii":"13","xiv":"14","xv":"15","xvi":"16","xvii":"17","xviii":"18","xix":"19","xx":"20","xxi":"21","xxii":"22","xxiii":"23"};
+
+function matchAddr(c, q){
+  if(!q.trim()) return true;
+  const raw=q.trim().toLowerCase();
+  const addr=(c.address||"").toLowerCase();
+  const notes=(c.notes||"").toLowerCase();
+  const name=(c.name||"").toLowerCase();
+  const all=addr+" "+notes+" "+name;
+
+  // Direct substring match first
+  if(all.includes(raw)) return true;
+
+  // Split into tokens and try each
+  const tokens=raw.split(/[\s,/]+/).filter(Boolean);
+  return tokens.every(tok=>{
+    if(all.includes(tok)) return true;
+    // Pure district number → PLZ
+    const plz=WIEN_PLZ[tok];
+    if(plz && all.includes(plz)) return true;
+    // Roman numeral district
+    const rNum=ROMAN[tok];
+    if(rNum){
+      const rPlz=WIEN_PLZ[rNum];
+      if(rPlz && all.includes(rPlz)) return true;
+      if(all.includes(rNum+".")) return true;
+    }
+    // "22" inside PLZ like "1220"
+    if(/^\d{1,2}$/.test(tok)){
+      const asPlz=WIEN_PLZ[tok];
+      if(asPlz && (addr.includes(asPlz)||notes.includes(asPlz))) return true;
+      // also match "22." or "22 " (district notation)
+      if(addr.includes(tok+".") || addr.includes(tok+" ")) return true;
+    }
+    // "1220" → district 22
+    if(/^1[0-2]\d0$/.test(tok) && (addr.includes(tok)||notes.includes(tok))) return true;
+    return false;
+  });
+}
+
 const PO={"A":0,"B":1,"C":2,"":3};
 function getFiltered(){
   return companies.filter(c=>{
     if(activeFilter!=="all"&&c.status!==activeFilter)return false;
     if(searchTerm&&!c.name.toLowerCase().includes(searchTerm.toLowerCase()))return false;
+    if(addressTerm&&!matchAddr(c,addressTerm))return false;
     if(activePrios.size>0){
       const ok=(activePrios.has("A")&&c.priority==="A")||(activePrios.has("B")&&c.priority==="B")||(activePrios.has("C")&&c.priority==="C")||(activePrios.has("none")&&!c.priority)||(activePrios.has("nopos")&&c.noPosition);
       if(!ok)return false;
@@ -1138,6 +1187,16 @@ function wireEvents(){
   document.getElementById("filterRow").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){activeFilter=b.dataset.f;render();}});
   document.getElementById("prioRow").addEventListener("click",e=>{const b=e.target.closest("[data-pf]");if(b){const v=b.dataset.pf;if(activePrios.has(v))activePrios.delete(v);else activePrios.add(v);render();}});
   document.getElementById("searchInp").addEventListener("input",e=>{searchTerm=e.target.value;renderList();});
+  document.getElementById("addrInp").addEventListener("input",e=>{
+    addressTerm=e.target.value;
+    document.getElementById("addrClearBtn").hidden=!addressTerm;
+    renderList();
+  });
+  document.getElementById("addrClearBtn").addEventListener("click",()=>{
+    addressTerm="";document.getElementById("addrInp").value="";
+    document.getElementById("addrClearBtn").hidden=true;
+    renderList();
+  });
   document.getElementById("btnExport").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(companies,null,2)],{type:"application/json"});const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(blob),download:t("expFile")});a.click();URL.revokeObjectURL(a.href);});
   document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
   document.getElementById("importFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const arr=JSON.parse(r.result);if(!Array.isArray(arr))throw new Error("invalid");if(confirm(t("impQ",{n:arr.length}))){companies=[...companies,...arr];saveC();render();}}catch(err){alert(t("impE",{m:err.message}));}};r.readAsText(f);e.target.value="";});
