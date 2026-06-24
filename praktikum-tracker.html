@@ -203,6 +203,44 @@ select.ssel{background:var(--bg-el);border:1px solid var(--border);color:var(--t
 .set-btns{display:flex;gap:5px;flex-shrink:0;}
 
 .empty{text-align:center;color:var(--faint);padding:50px 20px;font-size:13px;border:1px dashed var(--border);border-radius:14px;}
+
+/* Discovery panel */
+.disc-panel{background:var(--bg-card);border:1px solid var(--accent);border-radius:14px;
+  margin-bottom:16px;overflow:hidden;
+  box-shadow:0 0 0 1px var(--glow),0 8px 32px -8px rgba(157,111,255,.2);}
+.disc-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  border-bottom:1px solid var(--border-s);}
+.disc-head h3{font-size:14px;font-weight:650;color:var(--accent2);display:flex;align-items:center;gap:7px;}
+.disc-inputs{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;padding:14px 16px;border-bottom:1px solid var(--border-s);}
+@media(max-width:560px){.disc-inputs{grid-template-columns:1fr;}}
+.disc-inp{background:var(--bg-el);border:1px solid var(--border);color:var(--text);
+  font-size:13px;padding:8px 10px;border-radius:8px;outline:none;font-family:inherit;}
+.disc-inp:focus{border-color:var(--accent);}
+.btn-disc-search{background:var(--accent);border:none;color:#140c24;font-weight:700;
+  font-size:13px;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;}
+.btn-disc-search:hover{filter:brightness(1.08);}
+.btn-disc-search:disabled{opacity:.4;cursor:default;}
+.disc-results{padding:0 12px;}
+.disc-card{background:var(--bg-el);border:1px solid var(--border-s);border-radius:10px;
+  padding:13px;margin:10px 0;display:flex;gap:12px;align-items:flex-start;}
+.disc-card-info{flex:1;min-width:0;}
+.disc-card-info h4{font-size:13px;font-weight:650;margin-bottom:4px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.disc-card-info p{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:4px;}
+.disc-card-info small{font-size:11px;color:var(--faint);}
+.disc-card-info small span{margin-right:10px;}
+.btn-disc-add{background:var(--glow);border:1px solid var(--accent);color:var(--accent2);
+  font-size:12px;font-weight:650;padding:7px 11px;border-radius:8px;cursor:pointer;
+  white-space:nowrap;flex-shrink:0;transition:background .15s;}
+.btn-disc-add:hover{background:var(--accent);color:#140c24;}
+.btn-disc-add.added{background:rgba(79,214,147,.15);border-color:var(--s4);color:var(--s4);cursor:default;}
+.disc-footer{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.disc-status{font-size:12px;color:var(--dim);flex:1;}
+.disc-status.err{color:var(--danger);}
+.disc-status.ok{color:var(--s4);}
+.btn-disc-more{background:var(--bg-el);border:1px solid var(--border);color:var(--dim);
+  font-size:12px;padding:7px 13px;border-radius:8px;cursor:pointer;}
+.btn-disc-more:hover{color:var(--text);border-color:var(--accent);}
 footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;line-height:1.6;}
 
 @media(max-width:600px){
@@ -254,6 +292,7 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
       <button class="btn-ghost lbtn" data-l="ru">RU</button>
       <button class="btn-ghost lbtn" data-l="en">EN</button>
       <button class="btn-ghost" id="btnSettings">⚙</button>
+      <button class="btn-ghost" id="btnDiscover" style="color:var(--accent2);border-color:var(--accent);"></button>
       <button class="btn-ghost" id="btnExport"></button>
       <button class="btn-ghost" id="btnImport"></button>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -291,10 +330,23 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
   <div class="frow" id="filterRow"></div>
   <div class="frow" id="prioRow"></div>
   <div class="search-row"><input class="search-inp" id="searchInp" type="text"></div>
-  <div class="search-row">
-    <span style="font-size:16px;flex:none;line-height:34px;">📍</span>
-    <input class="search-inp" id="addrInp" type="text" style="flex:1;">
-    <button class="btn-ghost" id="addrClearBtn" hidden style="font-size:11px;padding:7px 9px;">✕</button>
+
+  <!-- Discovery panel -->
+  <div class="disc-panel" id="discPanel" hidden>
+    <div class="disc-head">
+      <h3>🔍 <span id="discTitle"></span></h3>
+      <button class="btn-ghost" id="discCloseBtn" style="font-size:11px;">✕</button>
+    </div>
+    <div class="disc-inputs">
+      <input class="disc-inp" id="discProf" type="text">
+      <input class="disc-inp" id="discLoc" type="text">
+      <button class="btn-disc-search" id="discSearchBtn"></button>
+    </div>
+    <div id="discResults"></div>
+    <div class="disc-footer" id="discFooter" hidden>
+      <span class="disc-status" id="discStatus"></span>
+      <button class="btn-disc-more" id="discMoreBtn" hidden></button>
+    </div>
   </div>
 
   <main class="list" id="cardList"></main>
@@ -461,7 +513,14 @@ const I18N={
 de:{
   appSub:"HTL Donaustadt · Ferialpraktikum",
   add:"+ Firma",exp:"Export",imp:"Import",
-  sentOf:"von {{t}} gesendet",sPh:"Firma suchen…",addrPh:"Adresse / Bezirk… z.B. Wien 22, 1220",all:"Alle",
+  sentOf:"von {{t}} gesendet",sPh:"Firma suchen…",all:"Alle",
+  discBtn:"🔍 Firmen finden",discTitle:"Neue Firmen entdecken",
+  discProfPh:"Beruf / Fachrichtung",discLocPh:"Ort / Bezirk — z.B. Wien, 1220, Donaustadt",
+  discSearch:"Suchen",discMore:"Mehr anzeigen",discAdd:"+ Hinzufügen",discAdded:"✓ Dabei",
+  discLoading:"Suche Firmen…",discAdding:"Füge hinzu & lade Infos…",
+  discFound:"{{n}} neue Firmen gefunden:",discErrKey:"Ungültiger API-Schlüssel.",
+  discErrNet:"Keine Verbindung zu Groq.",discErrGen:"Fehler: {{m}}",
+  discEmpty:"Keine neuen Firmen gefunden — versuche anderen Ort oder Beruf.",
   st:["Nicht gesendet","Gesendet","Antwort","Interview","Angenommen","Abgelehnt"],
   det:"Details",col:"Schließen",save:"Speichern",del:"🗑",
   addTitle:"Neue Firma",name:"Firmenname",prof:"Beruf / Fachrichtung",profPh:"z.B. Elektrotechnik",
@@ -517,7 +576,14 @@ de:{
 ru:{
   appSub:"HTL Donaustadt · Трекер практики",
   add:"+ Компания",exp:"Экспорт",imp:"Импорт",
-  sentOf:"из {{t}} отправлено",sPh:"Поиск…",addrPh:"Адрес / район… напр. Wien 22, 1220",all:"Все",
+  sentOf:"из {{t}} отправлено",sPh:"Поиск…",all:"Все",
+  discBtn:"🔍 Найти компании",discTitle:"Поиск новых компаний",
+  discProfPh:"Профессия / специальность",discLocPh:"Место — напр. Wien, 1220, 22 район",
+  discSearch:"Искать",discMore:"Ещё",discAdd:"+ Добавить",discAdded:"✓ Добавлено",
+  discLoading:"Ищу компании…",discAdding:"Добавляю и загружаю данные…",
+  discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",
+  discErrNet:"Нет связи с Groq.",discErrGen:"Ошибка: {{m}}",
+  discEmpty:"Новых компаний не найдено — попробуй другое место или профессию.",
   st:["Не отправлено","Отправлено","Ответ","Собеседование","Принято","Отказ"],
   det:"Подробнее",col:"Свернуть",save:"Сохранить",del:"🗑",
   addTitle:"Новая компания",name:"Название",prof:"Профессия",profPh:"напр. Elektrotechnik",
@@ -573,7 +639,14 @@ ru:{
 en:{
   appSub:"HTL Donaustadt · Ferialpraktikum",
   add:"+ Company",exp:"Export",imp:"Import",
-  sentOf:"of {{t}} sent",sPh:"Search…",addrPh:"Address / district… e.g. Wien 22, 1220",all:"All",
+  sentOf:"of {{t}} sent",sPh:"Search…",all:"All",
+  discBtn:"🔍 Find companies",discTitle:"Discover new companies",
+  discProfPh:"Profession / field",discLocPh:"Location — e.g. Vienna, 1220, Donaustadt",
+  discSearch:"Search",discMore:"Load more",discAdd:"+ Add",discAdded:"✓ Added",
+  discLoading:"Searching for companies…",discAdding:"Adding & loading info…",
+  discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",
+  discErrNet:"Cannot connect to Groq.",discErrGen:"Error: {{m}}",
+  discEmpty:"No new companies found — try a different location or profession.",
   st:["Not sent","Sent","Response","Interview","Accepted","Rejected"],
   det:"Details",col:"Collapse",save:"Save",del:"🗑",
   addTitle:"New Company",name:"Company name",prof:"Profession / field",profPh:"e.g. Electrical Eng.",
@@ -641,7 +714,7 @@ let groqKey=localStorage.getItem(SK_GROQ)||"";
 let ghPat=localStorage.getItem(SK_PAT)||"";
 let gistId=localStorage.getItem(SK_GIST)||"";
 let syncTs=parseInt(localStorage.getItem(SK_STS)||"0");
-let activeFilter="all",activePrios=new Set(),searchTerm="",addressTerm="",expandedId=null;
+let activeFilter="all",activePrios=new Set(),searchTerm="",expandedId=null;
 let fileHandle=null,asState="disconnected",rlCache={},syncState="none";
 
 function t(k,v={}){let s=I18N[lang][k]||I18N.en[k]||k;Object.entries(v).forEach(([a,b])=>s=s.replace(`{{${a}}}`,b));return s;}
@@ -897,8 +970,13 @@ function renderSettings(){
 
 function applyI18n(){
   si("appSub",t("appSub"));si("btnAdd",t("add"));si("btnExport",t("exp"));si("btnImport",t("imp"));
+  si("btnDiscover",t("discBtn"));si("discTitle",t("discTitle"));si("discSearchBtn",t("discSearch"));
+  const dp=document.getElementById("discProf"),dl=document.getElementById("discLoc");
+  if(dp&&!dp.value)dp.placeholder=t("discProfPh");
+  if(dl&&!dl.value)dl.placeholder=t("discLocPh");
+  const dm=document.getElementById("discMoreBtn");if(dm)dm.textContent=t("discMore");
   document.getElementById("searchInp").placeholder=t("sPh");
-  document.getElementById("addrInp").placeholder=t("addrPh");si("footerNote",t("foot"));
+  si("footerNote",t("foot"));
   si("addTitle",t("addTitle"));si("lblName",t("name"));si("lblProf",t("prof"));si("lblPrio",t("prio"));
   document.getElementById("fPrioNone").textContent=t("prioN");
   si("lblSite",t("site"));si("lblPhone",t("phone"));si("lblCont",t("cont"));si("lblRole",t("role"));
@@ -934,54 +1012,11 @@ function renderFilters(){
   document.getElementById("prioRow").innerHTML=ph;
 }
 
-// Vienna district → PLZ mapping + smart address match
-const WIEN_PLZ={"1":"1010","2":"1020","3":"1030","4":"1040","5":"1050","6":"1060","7":"1070","8":"1080","9":"1090","10":"1100","11":"1110","12":"1120","13":"1130","14":"1140","15":"1150","16":"1160","17":"1170","18":"1180","19":"1190","20":"1200","21":"1210","22":"1220","23":"1230"};
-const ROMAN={"i":"1","ii":"2","iii":"3","iv":"4","v":"5","vi":"6","vii":"7","viii":"8","ix":"9","x":"10","xi":"11","xii":"12","xiii":"13","xiv":"14","xv":"15","xvi":"16","xvii":"17","xviii":"18","xix":"19","xx":"20","xxi":"21","xxii":"22","xxiii":"23"};
-
-function matchAddr(c, q){
-  if(!q.trim()) return true;
-  const raw=q.trim().toLowerCase();
-  const addr=(c.address||"").toLowerCase();
-  const notes=(c.notes||"").toLowerCase();
-  const name=(c.name||"").toLowerCase();
-  const all=addr+" "+notes+" "+name;
-
-  // Direct substring match first
-  if(all.includes(raw)) return true;
-
-  // Split into tokens and try each
-  const tokens=raw.split(/[\s,/]+/).filter(Boolean);
-  return tokens.every(tok=>{
-    if(all.includes(tok)) return true;
-    // Pure district number → PLZ
-    const plz=WIEN_PLZ[tok];
-    if(plz && all.includes(plz)) return true;
-    // Roman numeral district
-    const rNum=ROMAN[tok];
-    if(rNum){
-      const rPlz=WIEN_PLZ[rNum];
-      if(rPlz && all.includes(rPlz)) return true;
-      if(all.includes(rNum+".")) return true;
-    }
-    // "22" inside PLZ like "1220"
-    if(/^\d{1,2}$/.test(tok)){
-      const asPlz=WIEN_PLZ[tok];
-      if(asPlz && (addr.includes(asPlz)||notes.includes(asPlz))) return true;
-      // also match "22." or "22 " (district notation)
-      if(addr.includes(tok+".") || addr.includes(tok+" ")) return true;
-    }
-    // "1220" → district 22
-    if(/^1[0-2]\d0$/.test(tok) && (addr.includes(tok)||notes.includes(tok))) return true;
-    return false;
-  });
-}
-
 const PO={"A":0,"B":1,"C":2,"":3};
 function getFiltered(){
   return companies.filter(c=>{
     if(activeFilter!=="all"&&c.status!==activeFilter)return false;
     if(searchTerm&&!c.name.toLowerCase().includes(searchTerm.toLowerCase()))return false;
-    if(addressTerm&&!matchAddr(c,addressTerm))return false;
     if(activePrios.size>0){
       const ok=(activePrios.has("A")&&c.priority==="A")||(activePrios.has("B")&&c.priority==="B")||(activePrios.has("C")&&c.priority==="C")||(activePrios.has("none")&&!c.priority)||(activePrios.has("nopos")&&c.noPosition);
       if(!ok)return false;
@@ -1187,15 +1222,48 @@ function wireEvents(){
   document.getElementById("filterRow").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){activeFilter=b.dataset.f;render();}});
   document.getElementById("prioRow").addEventListener("click",e=>{const b=e.target.closest("[data-pf]");if(b){const v=b.dataset.pf;if(activePrios.has(v))activePrios.delete(v);else activePrios.add(v);render();}});
   document.getElementById("searchInp").addEventListener("input",e=>{searchTerm=e.target.value;renderList();});
-  document.getElementById("addrInp").addEventListener("input",e=>{
-    addressTerm=e.target.value;
-    document.getElementById("addrClearBtn").hidden=!addressTerm;
-    renderList();
+
+  // Discovery panel
+  document.getElementById("btnDiscover").addEventListener("click",()=>{
+    const panel=document.getElementById("discPanel");
+    panel.hidden=!panel.hidden;
+    if(!panel.hidden)document.getElementById("discProf").focus();
   });
-  document.getElementById("addrClearBtn").addEventListener("click",()=>{
-    addressTerm="";document.getElementById("addrInp").value="";
-    document.getElementById("addrClearBtn").hidden=true;
-    renderList();
+  document.getElementById("discCloseBtn").addEventListener("click",()=>{
+    document.getElementById("discPanel").hidden=true;
+  });
+  document.getElementById("discSearchBtn").addEventListener("click",()=>runDiscovery(false));
+  document.getElementById("discProf").addEventListener("keydown",e=>{if(e.key==="Enter")runDiscovery(false);});
+  document.getElementById("discLoc").addEventListener("keydown",e=>{if(e.key==="Enter")runDiscovery(false);});
+  document.getElementById("discMoreBtn").addEventListener("click",()=>runDiscovery(true));
+
+  // Add company from discovery result
+  document.getElementById("discResults").addEventListener("click",async e=>{
+    const btn=e.target.closest("[data-disc]");if(!btn||btn.classList.contains("added"))return;
+    const idx=parseInt(btn.dataset.disc);
+    const r=discAllResults[idx];if(!r)return;
+    btn.disabled=true;btn.textContent=t("discAdding");
+    // Add company with profession + location pre-filled
+    const prof=document.getElementById("discProf").value.trim();
+    addC({name:r.name,profession:prof,priority:"",
+      website:r.website||"",phone:"",contactName:"",contactRole:"",
+      email:"",address:r.address||"",notes:r.description||""});
+    // Auto-fill contacts via AI in background
+    try{
+      const{r:info}=await aiFill(r.name,prof);
+      const c=companies.find(c=>c.name===r.name);
+      if(c){
+        if(info.website&&!c.website)c.website=info.website;
+        if(info.phone)c.phone=info.phone;
+        if(info.email)c.email=info.email;
+        if(info.contactName)c.contactName=info.contactName;
+        if(info.contactRole)c.contactRole=info.contactRole;
+        if(info.address&&!c.address)c.address=info.address;
+        saveC();render();
+      }
+    }catch(err){console.warn("Auto-fill failed:",err);}
+    btn.textContent=t("discAdded");btn.classList.add("added");
+    renderDiscResults();
   });
   document.getElementById("btnExport").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(companies,null,2)],{type:"application/json"});const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(blob),download:t("expFile")});a.click();URL.revokeObjectURL(a.href);});
   document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
@@ -1354,6 +1422,101 @@ function playChime(){
       osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+end);
     });
   }catch(e){}
+}
+
+// ── Company Discovery ─────────────────────────────────────
+let discPage=0,discProf="",discLoc="",discAllResults=[];
+
+function buildDiscPrompt(prof,loc,exclude,page){
+  const excList=exclude.slice(0,30).join(", ")||"none";
+  const variety=page>0?` Give ${page*5+1}-${page*5+5}th different results, not the first ones.`:"";
+  return{
+    sys:`You help an Austrian HTL student (age 16-18) find Ferialpraktikum (summer internship) companies in Austria. Return ONLY valid JSON array, no markdown, no extra text: [{"name":"","description":"","address":"","website":""}]. Max 1 sentence description. Real Austrian companies only. Never return companies from the excluded list.`,
+    usr:`Find exactly 5 real companies offering "${prof}" internships in/near "${loc}", Austria. Exclude already contacted: [${excList}].${variety} Focus on companies reachable for a student in that area.`
+  };
+}
+
+async function callGroqDisc(prof,loc,page){
+  const exclude=companies.map(c=>c.name);
+  const{sys,usr}=buildDiscPrompt(prof,loc,exclude,page);
+  const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
+    body:JSON.stringify({model:"llama-3.3-70b-versatile",messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.7,max_completion_tokens:600})
+  });
+  try{updRl(res.headers);}catch(e){}
+  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
+  const d=await res.json();
+  const raw=d.choices?.[0]?.message?.content||"";
+  const m=raw.match(/\[[\s\S]*\]/);
+  if(!m)throw new Error("bad json");
+  const arr=JSON.parse(m[0]);
+  if(!Array.isArray(arr))throw new Error("not array");
+  // Filter out already in list
+  const existing=new Set(companies.map(c=>c.name.toLowerCase().trim()));
+  return arr.filter(r=>r.name&&!existing.has(r.name.toLowerCase().trim()));
+}
+
+function discErrMsg(e){
+  if(e.status===401||e.status===403)return t("discErrKey");
+  if(e.message?.includes("Failed to fetch")||e.message?.includes("NetworkError"))return t("discErrNet");
+  return t("discErrGen",{m:(e.message||"").slice(0,60)});
+}
+
+function renderDiscCard(r,idx){
+  const alreadyAdded=companies.some(c=>c.name.toLowerCase().trim()===r.name.toLowerCase().trim());
+  return`<div class="disc-card" id="dcard-${idx}">
+    <div class="disc-card-info">
+      <h4>${esc(r.name)}</h4>
+      <p>${esc(r.description)}</p>
+      <small>
+        ${r.address?`<span>📍 ${esc(r.address)}</span>`:""}
+        ${r.website?`<span>🌐 ${esc(r.website)}</span>`:""}
+      </small>
+    </div>
+    <button class="btn-disc-add${alreadyAdded?" added":""}" data-disc="${idx}" ${alreadyAdded?"disabled":""}>${alreadyAdded?t("discAdded"):t("discAdd")}</button>
+  </div>`;
+}
+
+function renderDiscResults(){
+  const wrap=document.getElementById("discResults");
+  if(!discAllResults.length){wrap.innerHTML="";return;}
+  wrap.innerHTML=discAllResults.map((r,i)=>renderDiscCard(r,i)).join("");
+}
+
+async function runDiscovery(loadMore=false){
+  const profEl=document.getElementById("discProf"),locEl=document.getElementById("discLoc");
+  const prof=profEl.value.trim(),loc=locEl.value.trim();
+  if(!prof||!loc){
+    document.getElementById("discStatus").className="disc-status err";
+    document.getElementById("discStatus").textContent={"de":"Bitte Beruf und Ort angeben.","ru":"Укажи профессию и место.","en":"Please enter profession and location."}[lang]||"Enter profession and location.";
+    document.getElementById("discFooter").hidden=false;
+    return;
+  }
+  if(!loadMore){discPage=0;discAllResults=[];discProf=prof;discLoc=loc;}
+  const btn=document.getElementById("discSearchBtn"),moreBtn=document.getElementById("discMoreBtn");
+  btn.disabled=true;if(moreBtn)moreBtn.disabled=true;
+  const statusEl=document.getElementById("discStatus");
+  statusEl.className="disc-status";statusEl.textContent=t("discLoading");
+  document.getElementById("discFooter").hidden=false;
+  moreBtn.hidden=true;
+  try{
+    const results=await callGroqDisc(discProf,discLoc,discPage);
+    if(!results.length&&!discAllResults.length){
+      statusEl.className="disc-status";statusEl.textContent=t("discEmpty");
+    }else{
+      discAllResults=[...discAllResults,...results];
+      discPage++;
+      renderDiscResults();
+      statusEl.className="disc-status ok";
+      statusEl.textContent=t("discFound",{n:discAllResults.length});
+      moreBtn.hidden=false;moreBtn.textContent=t("discMore");
+    }
+  }catch(e){
+    statusEl.className="disc-status err";statusEl.textContent=discErrMsg(e);
+  }finally{
+    btn.disabled=false;if(moreBtn)moreBtn.disabled=false;
+  }
 }
 
 // ── PWA icon ──────────────────────────────────────────────
