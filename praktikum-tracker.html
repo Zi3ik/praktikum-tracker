@@ -433,13 +433,17 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
       <button class="btn-ghost bar-btn" id="setAsBtn"></button>
     </div>
 
+
     <!-- Download / share link -->
     <div class="set-row">
       <div class="set-lbl">
         <b id="setLblShare"></b>
         <small id="setShareUrl" style="font-size:11px;color:var(--faint);word-break:break-all;display:block;margin-top:2px;"></small>
       </div>
-      <button class="btn-ghost bar-btn" id="setShareBtn" style="flex-shrink:0;"></button>
+      <div class="set-btns">
+        <button class="btn-ghost bar-btn" id="setShareOpenBtn" style="font-size:11px;" title="Open"></button>
+        <button class="btn-ghost bar-btn" id="setShareCopyBtn" style="font-size:11px;" title="Copy"></button>
+      </div>
     </div>
 
     <div class="m-actions"><button class="btn-prim" id="setCloseBtn"></button></div>
@@ -875,8 +879,10 @@ function renderSettings(){
     ? window.location.href.replace(/\/[^/]*$/, "/download.html")
     : "download.html";
   if(shareUrl)shareUrl.textContent=dlBase;
-  const shareBtn=document.getElementById("setShareBtn");
-  if(shareBtn)shareBtn.textContent={"de":"Kopieren","ru":"Копировать","en":"Copy"}[lang]||"Copy";
+  const shareBtn=document.getElementById("setShareOpenBtn");
+  if(shareBtn)shareBtn.textContent={"de":"↗ Öffnen","ru":"↗ Открыть","en":"↗ Open"}[lang]||"↗ Open";
+  const shareCopyBtn=document.getElementById("setShareCopyBtn");
+  if(shareCopyBtn)shareCopyBtn.textContent={"de":"Kopieren","ru":"Копировать","en":"Copy"}[lang]||"Copy";
 
   // Autosave
   const asBtn=document.getElementById("setAsBtn");
@@ -1258,10 +1264,14 @@ function wireEvents(){
     try{await navigator.clipboard.writeText(ghPat);document.getElementById("tokenCopyBtn").textContent="✓";}
     catch(e){prompt("",ghPat);}
   });
-  document.getElementById("setShareBtn").addEventListener("click",async()=>{
+  document.getElementById("setShareOpenBtn").addEventListener("click",()=>{
     const url=document.getElementById("setShareUrl").textContent;
-    try{await navigator.clipboard.writeText(url);document.getElementById("setShareBtn").textContent="✓";}
-    catch(e){prompt("Copy this link:",url);}
+    window.open(url,"_blank","noopener");
+  });
+  document.getElementById("setShareCopyBtn").addEventListener("click",async()=>{
+    const url=document.getElementById("setShareUrl").textContent;
+    try{await navigator.clipboard.writeText(url);document.getElementById("setShareCopyBtn").textContent="✓";}
+    catch(e){prompt("",url);}
     setTimeout(()=>renderSettings(),1500);
   });
   document.getElementById("setAsBtn").addEventListener("click",async()=>{
