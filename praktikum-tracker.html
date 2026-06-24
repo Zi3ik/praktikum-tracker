@@ -1239,6 +1239,16 @@ function wireEvents(){
 
   // Add company from discovery result
   document.getElementById("discResults").addEventListener("click",async e=>{
+    // Remove from list (keep in discovery)
+    const removeBtn=e.target.closest("[data-disc-remove]");
+    if(removeBtn){
+      const idx=parseInt(removeBtn.dataset.discRemove);
+      const r=discAllResults[idx];if(!r)return;
+      companies=companies.filter(c=>c.name.toLowerCase().trim()!==r.name.toLowerCase().trim());
+      saveC();render();renderDiscResults();
+      return;
+    }
+    // Add to list
     const btn=e.target.closest("[data-disc]");if(!btn||btn.classList.contains("added"))return;
     const idx=parseInt(btn.dataset.disc);
     const r=discAllResults[idx];if(!r)return;
@@ -1465,6 +1475,7 @@ function discErrMsg(e){
 
 function renderDiscCard(r,idx){
   const alreadyAdded=companies.some(c=>c.name.toLowerCase().trim()===r.name.toLowerCase().trim());
+  const removeLabel={"de":"Entfernen","ru":"Удалить","en":"Remove"}[lang]||"Remove";
   return`<div class="disc-card" id="dcard-${idx}">
     <div class="disc-card-info">
       <h4>${esc(r.name)}</h4>
@@ -1474,7 +1485,13 @@ function renderDiscCard(r,idx){
         ${r.website?`<span>🌐 ${esc(r.website)}</span>`:""}
       </small>
     </div>
-    <button class="btn-disc-add${alreadyAdded?" added":""}" data-disc="${idx}" ${alreadyAdded?"disabled":""}>${alreadyAdded?t("discAdded"):t("discAdd")}</button>
+    <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">
+      ${alreadyAdded
+        ?`<span class="btn-disc-add added" style="cursor:default;">${t("discAdded")}</span>
+           <button class="btn-ghost" data-disc-remove="${idx}" style="font-size:11px;padding:5px 8px;color:var(--danger);border-color:var(--danger);">🗑 ${removeLabel}</button>`
+        :`<button class="btn-disc-add" data-disc="${idx}">${t("discAdd")}</button>`
+      }
+    </div>
   </div>`;
 }
 
