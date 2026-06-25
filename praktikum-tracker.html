@@ -392,6 +392,10 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
           <option value="C">⚪ C</option>
         </select>
       </div>
+      <div class="field" style="grid-column:1/-1">
+        <label id="lblAiLoc"></label>
+        <input type="text" id="fAiLoc" style="background:rgba(157,111,255,.06);border-color:rgba(157,111,255,.3);">
+      </div>
     </div>
     <div class="ai-row"><button class="btn-ai" id="aiFillBtn">✨ <span id="aiFillLbl"></span></button></div>
     <p id="aiDisc" style="font-size:11px;color:var(--faint);margin:3px 0 10px;"></p>
@@ -551,6 +555,7 @@ de:{
   site:"Website",phone:"Telefon",cont:"Ansprechperson",role:"Position",
   email:"E-Mail",addr:"Adresse",notes:"Notizen",sDate:"Datum gesendet",
   aiFill:"KI-Daten suchen",aiDisc:"KI kann sich irren — bitte prüfen.",
+  aiLoc:"📍 Suchort für KI (optional)",aiLocPh:"z.B. Wien, 1220, Donaustadt — leer = überall",
   aiLoad:"Suche…",aiOk:"Fertig (Websuche).",aiOkN:"Fertig (ohne Live-Suche).",
   aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiENet:"Keine Verbindung zu Groq.",
   aiEKey:"Ungültiger API-Schlüssel.",aiEGen:"Fehler: {{m}}",
@@ -624,6 +629,7 @@ ru:{
   site:"Сайт",phone:"Телефон",cont:"Контакт",role:"Должность",
   email:"Email",addr:"Адрес",notes:"Заметки",sDate:"Дата отправки",
   aiFill:"Найти через ИИ",aiDisc:"ИИ может ошибаться — проверяй.",
+  aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, 1220, Donaustadt — пусто = везде",
   aiLoad:"Ищу…",aiOk:"Готово (веб-поиск).",aiOkN:"Готово (без поиска).",
   aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Groq.",
   aiEKey:"Неверный API-ключ.",aiEGen:"Ошибка: {{m}}",
@@ -697,6 +703,7 @@ en:{
   site:"Website",phone:"Phone",cont:"Contact person",role:"Position",
   email:"Email",addr:"Address",notes:"Notes",sDate:"Date sent",
   aiFill:"Find data with AI",aiDisc:"AI may make mistakes — always verify.",
+  aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, 1220, Donaustadt — blank = anywhere",
   aiLoad:"Searching…",aiOk:"Done (web search).",aiOkN:"Done (no web search).",
   aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Groq.",
   aiEKey:"Invalid API key.",aiEGen:"Error: {{m}}",
@@ -937,15 +944,16 @@ function renderSyncBar(){
 }
 
 // ── AI ────────────────────────────────────────────────────
-function bPrompt(name,prof){
+function bPrompt(name,prof,loc){
   const p=prof?` Student seeks "${prof}" internship.`:"";
+  const l=loc?` Focus on location: "${loc}", Austria.`:"";
   return{
-    sys:`Data lookup for Austrian HTL student Ferialpraktikum.${p} Find: website, phone, HR email, contact person name+role, Austrian office address. Reply ONLY valid JSON no markdown: {"website":"","phone":"","email":"","contactName":"","contactRole":"","address":"","notes":""}. Empty if unknown. Never invent.`,
-    usr:`Company: "${name}", Austria.${prof?` "${prof}" internship contact.`:""}`
+    sys:`Data lookup for Austrian HTL student Ferialpraktikum.${p}${l} Find: website, phone, HR email, contact person name+role, Austrian office address. Reply ONLY valid JSON no markdown: {"website":"","phone":"","email":"","contactName":"","contactRole":"","address":"","notes":""}. Empty if unknown. Never invent.`,
+    usr:`Company: "${name}", Austria.${prof?` "${prof}" internship contact.`:""}${loc?` In/near: "${loc}".`:""}`
   };
 }
-async function callGroq(mid,name,prof){
-  const{sys,usr}=bPrompt(name,prof);
+async function callGroq(mid,name,prof,loc){
+  const{sys,usr}=bPrompt(name,prof,loc);
   const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
     method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
     body:JSON.stringify({model:mid,messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.1,max_completion_tokens:280})});
@@ -962,16 +970,16 @@ function aiErr(e){
   if(m.includes("Failed to fetch")||m.includes("NetworkError"))return t("aiENet");
   return t("aiEGen",{m:m.slice(0,60)});
 }
-async function aiFill(name,prof){
+async function aiFill(name,prof,loc){
   if(dayLimitHit())throw Object.assign(new Error("limit"),{status:429});
   let last;
-  for(const m of MODELS){try{return{r:await callGroq(m.id,name,prof),s:m.s};}catch(e){last=e;if(e.status===401||e.status===403||e.status===429)throw e;}}
+  for(const m of MODELS){try{return{r:await callGroq(m.id,name,prof,loc),s:m.s};}catch(e){last=e;if(e.status===401||e.status===403||e.status===429)throw e;}}
   throw last;
 }
-async function runAi(stEl,btn,name,prof,apFn){
+async function runAi(stEl,btn,name,prof,loc,apFn){
   if(!name.trim()){stEl.className="ai-st err";stEl.textContent="—";return;}
   btn.disabled=true;stEl.className="ai-st loading";stEl.textContent=t("aiLoad");
-  try{const{r,s}=await aiFill(name.trim(),prof);apFn(r);stEl.className="ai-st ok";stEl.textContent=s?t("aiOk"):t("aiOkN");}
+  try{const{r,s}=await aiFill(name.trim(),prof,loc||"");apFn(r);stEl.className="ai-st ok";stEl.textContent=s?t("aiOk"):t("aiOkN");}
   catch(e){stEl.className="ai-st err";stEl.textContent=aiErr(e);renderRl();}
   finally{btn.disabled=false;}
 }
@@ -1076,6 +1084,8 @@ function applyI18n(){
   si("lblSite",t("site"));si("lblPhone",t("phone"));si("lblCont",t("cont"));si("lblRole",t("role"));
   si("lblEmail",t("email"));si("lblAddr",t("addr"));si("lblNotes",t("notes"));
   si("aiFillLbl",t("aiFill"));si("aiDisc",t("aiDisc"));si("addCancelBtn",t("cancel"));si("addSaveBtn",t("save"));
+  si("lblAiLoc",t("aiLoc"));
+  const fal=document.getElementById("fAiLoc");if(fal)fal.placeholder=t("aiLocPh");
   si("setTitle",t("setTitle"));si("setSecAcc",t("secAcc"));si("setSecSync",t("secSync"));si("setSecStore",t("secStore"));
   si("setLblGh",t("lGh"));si("setLblGroq",t("lGroq"));
   si("setLblLang",t("lLang"));si("setLblAs",t("lAs"));si("setLblAsSub",t("lAsSub"));
@@ -1276,7 +1286,7 @@ function saveDet(id,card){
 
 // ── Modal ─────────────────────────────────────────────────
 const addModal=document.getElementById("addModal");
-const MF=["fName","fProf","fSite","fPhone","fCont","fRole","fEmail","fAddr","fNotes"];
+const MF=["fName","fProf","fAiLoc","fSite","fPhone","fCont","fRole","fEmail","fAddr","fNotes"];
 function hasData(){return MF.some(id=>{const el=document.getElementById(id);return el&&el.value.trim();});}
 function openAdd(){MF.forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});document.getElementById("fPrio").value="";document.getElementById("aiStNew").textContent="";document.getElementById("aiStNew").className="ai-st";addModal.hidden=false;document.getElementById("fName").focus();}
 function closeAdd(){addModal.hidden=true;}
@@ -1382,7 +1392,8 @@ function wireEvents(){
   });
   document.getElementById("aiFillBtn").addEventListener("click",()=>{
     const nm=document.getElementById("fName").value,pr=document.getElementById("fProf").value.trim();
-    runAi(document.getElementById("aiStNew"),document.getElementById("aiFillBtn"),nm,pr,r=>{
+    const loc=document.getElementById("fAiLoc").value.trim();
+    runAi(document.getElementById("aiStNew"),document.getElementById("aiFillBtn"),nm,pr,loc,r=>{
       document.getElementById("fSite").value=r.website||"";document.getElementById("fPhone").value=r.phone||"";
       document.getElementById("fCont").value=r.contactName||"";document.getElementById("fRole").value=r.contactRole||"";
       document.getElementById("fEmail").value=r.email||"";document.getElementById("fAddr").value=r.address||"";
@@ -1419,7 +1430,7 @@ function wireEvents(){
     else if(action==="ai"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       const pr=card.querySelector("[data-f='profession']")?.value||c.profession||"";
-      runAi(card.querySelector("[data-role='ais']"),e.target.closest("[data-action='ai']"),c.name,pr,r=>{
+      runAi(card.querySelector("[data-role='ais']"),e.target.closest("[data-action='ai']"),c.name,pr,"",r=>{
         const sf=(f,v)=>{const el=card.querySelector(`[data-f='${f}']`);if(el)el.value=v||"";};
         sf("website",r.website);sf("phone",r.phone);sf("contactName",r.contactName);
         sf("contactRole",r.contactRole);sf("email",r.email);sf("address",r.address);sf("notes",r.notes);
