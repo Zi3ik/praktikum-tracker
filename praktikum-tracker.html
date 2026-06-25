@@ -568,7 +568,7 @@ de:{
   openDate:"Bewerbung ab",deadline:"Frist bis",datesAi:"KI-Schätzung — bitte prüfen",
   datesConfirm:"Bestätigen",datesFind:"📅 Fristen suchen",datesFinding:"Suche Fristen…",
   datesFindOk:"Fristen gefunden (KI-Schätzung).",datesFindEmpty:"Keine Fristen gefunden.",
-  datesFindDisc:"KI schätzt Fristen — echte Daten auf Firmenseite prüfen!",
+  datesFindDisc:"KI-Schätzung — bitte auf der Firmenseite nachprüfen.",
   sentAgo:"vor {{d}} Tagen gesendet",sentToday:"Heute gesendet",followUp:"⚡ Follow-up?",
   dlUrgent:"🔴 {{d}} Tage",dlSoon:"🟡 {{d}} Tage",dlFar:"{{d}} Tage",dlPassed:"Abgelaufen",
   openSoon:"📅 Öffnet in {{d}} Tagen",openToday:"📅 Öffnet heute!",openPassed:"Offen seit {{d}} Tagen",
@@ -642,7 +642,7 @@ ru:{
   openDate:"Приём с",deadline:"Дедлайн до",datesAi:"Оценка ИИ — проверь на сайте",
   datesConfirm:"Подтвердить",datesFind:"📅 Найти сроки",datesFinding:"Ищу сроки…",
   datesFindOk:"Сроки найдены (оценка ИИ).",datesFindEmpty:"Сроки не найдены.",
-  datesFindDisc:"ИИ оценивает сроки — проверь на официальном сайте компании!",
+  datesFindDisc:"Оценка ИИ — рекомендуем проверить на сайте компании.",
   sentAgo:"отправлено {{d}} дн. назад",sentToday:"отправлено сегодня",followUp:"⚡ Follow-up?",
   dlUrgent:"🔴 {{d}} дн.",dlSoon:"🟡 {{d}} дн.",dlFar:"{{d}} дн.",dlPassed:"Просрочено",
   openSoon:"📅 Откроется через {{d}} дн.",openToday:"📅 Открывается сегодня!",openPassed:"Открыто {{d}} дн. назад",
@@ -716,7 +716,7 @@ en:{
   openDate:"Opens",deadline:"Deadline",datesAi:"AI estimate — verify on company site",
   datesConfirm:"Confirm",datesFind:"📅 Find dates",datesFinding:"Looking up dates…",
   datesFindOk:"Dates found (AI estimate).",datesFindEmpty:"No dates found.",
-  datesFindDisc:"AI estimates these dates — always verify on the official company website!",
+  datesFindDisc:"AI estimate — worth checking on the company's website.",
   sentAgo:"sent {{d}} days ago",sentToday:"sent today",followUp:"⚡ Follow-up?",
   dlUrgent:"🔴 {{d}}d",dlSoon:"🟡 {{d}}d",dlFar:"{{d}}d",dlPassed:"Passed",
   openSoon:"📅 Opens in {{d}}d",openToday:"📅 Opens today!",openPassed:"Open for {{d}}d",
@@ -1198,7 +1198,7 @@ function cardHtml(c){
   const dlBadge=dlBadgeHtml(c.deadline);
   const opBadge=c.status==="not_sent"?openBadgeHtml(c.openDate):"";
   const agoStr=sentAgoBadge(c);
-  const aiDateBadge=(c.datesFromAi&&!c.datesConfirmed)?`<span class="ai-date-badge">~${t("datesAi")}</span>`:"";
+  const aiDateBadge="";
 
   return`<article class="card" data-id="${c.id}" style="--c:${col}">
 <div class="card-main">${pb}
@@ -1226,7 +1226,7 @@ ${isOpen?`<div class="detail">
       <span style="font-size:12px;font-weight:650;color:var(--s3);">📅 ${t("openDate")} / ${t("deadline")}</span>
       <button class="btn-ai" data-action="dates" style="font-size:11px;padding:5px 9px;">✨ <span>${t("datesFind")}</span></button>
     </div>
-    ${(c.datesFromAi&&!c.datesConfirmed)?`<p style="font-size:11px;color:var(--s3);margin-bottom:8px;">⚠ ${t("datesFindDisc")}<br><span style="color:var(--faint);">${t("wrongDateHint")}</span></p>`:""}
+    ${(c.datesFromAi&&!c.datesConfirmed&&(c.openDate||c.deadline))?`<p style="font-size:11px;color:var(--faint);margin-bottom:8px;">💡 ${t("datesFindDisc")}</p>`:""}
     <div class="fgrid" style="margin:0;">
       <div class="field">
         <label>${t("openDate")}</label>
