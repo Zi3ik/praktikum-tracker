@@ -791,10 +791,11 @@ function openBadgeHtml(isoDate){
   if(!isoDate)return"";
   const d=daysDiff(isoDate);
   if(d===null)return"";
-  if(d>30)return"";
+  if(d>30)return""; // too far in future, not relevant yet
   if(d>0)return`<span class="open-badge">${t("openSoon",{d})}</span>`;
   if(d===0)return`<span class="open-badge">${t("openToday")}</span>`;
-  if(d>=-7)return`<span class="open-badge">${t("openPassed",{d:Math.abs(d)})}</span>`;
+  // Already open (d < 0) — show for up to 60 days
+  if(d>=-60)return`<span class="open-badge">${t("openPassed",{d:Math.abs(d)})}</span>`;
   return"";
 }
 function sentAgoBadge(c){
@@ -1335,7 +1336,7 @@ async function renderOb(){
     ${!autoLoaded?`<div class="ob-field"><input type="text" id="obKey" placeholder="${ob("p2")}" autocomplete="off"></div><div class="ob-err" id="obKeyErr"></div>`:""}
     <div class="ob-footer">
       <button class="btn-back" id="obBack">${ob("back")}</button>
-      <button class="btn-next" id="obNext"${autoLoaded?"":""}">${ob("next")}</button>
+      <button class="btn-next" id="obNext">${ob("next")}</button>
     </div>`;
     document.getElementById("obBack").addEventListener("click",()=>{obStep=1;renderOb();});
     if(!autoLoaded){
@@ -1501,8 +1502,8 @@ function wireEvents(){
   document.getElementById("syncBarBtn").addEventListener("click",()=>pullGist());
   // settings
   document.getElementById("btnSettings").addEventListener("click",()=>{applyI18n();document.getElementById("settingsModal").hidden=false;});
-  document.getElementById("setCloseBtn").addEventListener("click",()=>document.getElementById("settingsModal").hidden=true);
-  document.getElementById("settingsModal").addEventListener("click",e=>{if(e.target===document.getElementById("settingsModal"))document.getElementById("settingsModal").hidden=true;});
+  document.getElementById("setCloseBtn").addEventListener("click",()=>{clearInterval(tokenTimer);document.getElementById("settingsModal").hidden=true;});
+  document.getElementById("settingsModal").addEventListener("click",e=>{if(e.target===document.getElementById("settingsModal")){clearInterval(tokenTimer);document.getElementById("settingsModal").hidden=true;}});
   document.getElementById("setGhBtn").addEventListener("click",async()=>{
     const pat=prompt(t("ghPrompt"),ghPat||"");
     if(pat&&pat.trim().length>5){try{await connectGist(pat.trim());render();}catch(e){alert(e.message);}}
