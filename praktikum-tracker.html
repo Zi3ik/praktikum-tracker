@@ -150,6 +150,27 @@ body{
 .pbadge.C{background:rgba(255,255,255,.06);color:var(--faint);}
 .npos{font-size:10px;color:var(--danger);background:rgba(241,102,110,.1);
   border:1px solid rgba(241,102,110,.2);border-radius:4px;padding:1px 5px;margin-left:3px;}
+
+/* Deadline & date badges */
+.dl-badge{font-size:10px;font-weight:700;border-radius:5px;padding:2px 6px;white-space:nowrap;}
+.dl-urgent{color:#fff;background:var(--danger);}
+.dl-soon{color:#140c24;background:var(--s3);}
+.dl-far{color:var(--dim);background:var(--bg-el);border:1px solid var(--border);}
+.dl-passed{color:var(--danger);text-decoration:line-through;font-size:10px;}
+.open-badge{font-size:10px;color:var(--s2);background:rgba(52,201,192,.1);
+  border:1px solid rgba(52,201,192,.2);border-radius:5px;padding:2px 6px;white-space:nowrap;}
+.sent-ago{font-size:11px;color:var(--faint);}
+.sent-ago.followup{color:var(--s3);font-weight:600;}
+.ai-date-badge{font-size:10px;color:var(--s3);background:rgba(245,185,78,.1);
+  border:1px solid rgba(245,185,78,.25);border-radius:4px;padding:1px 5px;}
+
+/* Sort row */
+.sort-row{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.sort-row span{font-size:11px;color:var(--faint);flex-shrink:0;}
+.sort-chip{border:1px solid var(--border);background:var(--bg-card);color:var(--dim);
+  font-size:11px;padding:5px 9px;border-radius:99px;cursor:pointer;white-space:nowrap;}
+.sort-chip:hover{border-color:var(--accent);}
+.sort-chip.active{background:var(--bg-el);border-color:var(--accent2);color:var(--accent2);}
 select.ssel{background:var(--bg-el);border:1px solid var(--border);color:var(--text);
   font-size:12px;padding:6px 7px;border-radius:7px;outline:none;cursor:pointer;max-width:120px;flex-shrink:0;}
 .ibtn{background:transparent;border:1px solid var(--border);color:var(--dim);
@@ -329,6 +350,8 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
 
   <div class="frow" id="filterRow"></div>
   <div class="frow" id="prioRow"></div>
+  <div class="frow" id="dateRow"></div>
+  <div class="sort-row" id="sortRow"></div>
   <div class="search-row"><input class="search-inp" id="searchInp" type="text"></div>
 
   <!-- Discovery panel -->
@@ -537,6 +560,16 @@ de:{
   expFile:"praktikum-backup.json",impQ:"{{n}} Firmen importieren?",impE:"Fehler: {{m}}",
   foot:"Daten lokal gespeichert.",nPos:"Keine Stelle",nPosS:"Keine Stelle",
   fPrio:"Priorität:",
+  openDate:"Bewerbung ab",deadline:"Frist bis",datesAi:"KI-Schätzung — bitte prüfen",
+  datesConfirm:"Bestätigen",datesFind:"📅 Fristen suchen",datesFinding:"Suche Fristen…",
+  datesFindOk:"Fristen gefunden (KI-Schätzung).",datesFindEmpty:"Keine Fristen gefunden.",
+  datesFindDisc:"KI schätzt Fristen — echte Daten auf Firmenseite prüfen!",
+  sentAgo:"vor {{d}} Tagen gesendet",sentToday:"Heute gesendet",followUp:"⚡ Follow-up?",
+  dlUrgent:"🔴 {{d}} Tage",dlSoon:"🟡 {{d}} Tage",dlFar:"{{d}} Tage",dlPassed:"Abgelaufen",
+  openSoon:"📅 Öffnet in {{d}} Tagen",openToday:"📅 Öffnet heute!",openPassed:"Offen seit {{d}} Tagen",
+  fDeadline:"Frist:",fdSoon:"Frist ≤7 Tage",fdMonth:"Frist ≤30 Tage",fdOpen:"Öffnet bald",fdFollowup:"Follow-up nötig",
+  sortLabel:"Sortierung:",sortPrio:"Priorität",sortDeadline:"Nächste Frist",sortSent:"Älteste zuerst",sortName:"A–Z",
+  wrongDateHint:"Datum falsch? Einfach korrigieren und speichern — dann gilt es als bestätigt.",
   rl:"Anfragen: <b>{{r}}/{{l}} übrig</b> · Reset {{t}} UTC",
   rlLow:"⚠ Nur <b>{{r}} Anfragen</b> übrig.",rlOut:"⛔ Limit. Wieder ab <b>{{t}} UTC</b>.",
   setTitle:"Einstellungen",secAcc:"Account",secSync:"Synchronisation",secStore:"Speicher",
@@ -600,6 +633,16 @@ ru:{
   expFile:"praktikum-backup.json",impQ:"Импортировать {{n}} компаний?",impE:"Ошибка: {{m}}",
   foot:"Данные хранятся локально.",nPos:"Нет позиции",nPosS:"Нет позиции",
   fPrio:"Приоритет:",
+  openDate:"Приём с",deadline:"Дедлайн до",datesAi:"Оценка ИИ — проверь на сайте",
+  datesConfirm:"Подтвердить",datesFind:"📅 Найти сроки",datesFinding:"Ищу сроки…",
+  datesFindOk:"Сроки найдены (оценка ИИ).",datesFindEmpty:"Сроки не найдены.",
+  datesFindDisc:"ИИ оценивает сроки — проверь на официальном сайте компании!",
+  sentAgo:"отправлено {{d}} дн. назад",sentToday:"отправлено сегодня",followUp:"⚡ Follow-up?",
+  dlUrgent:"🔴 {{d}} дн.",dlSoon:"🟡 {{d}} дн.",dlFar:"{{d}} дн.",dlPassed:"Просрочено",
+  openSoon:"📅 Откроется через {{d}} дн.",openToday:"📅 Открывается сегодня!",openPassed:"Открыто {{d}} дн. назад",
+  fDeadline:"Дедлайн:",fdSoon:"Дедлайн ≤7 дн.",fdMonth:"Дедлайн ≤30 дн.",fdOpen:"Скоро открытие",fdFollowup:"Нужен follow-up",
+  sortLabel:"Сортировка:",sortPrio:"Приоритет",sortDeadline:"Ближайший дедлайн",sortSent:"Сначала старые",sortName:"А–Я",
+  wrongDateHint:"Дата неверная? Просто исправь и сохрани — после этого она будет считаться подтверждённой.",
   rl:"Запросов: <b>{{r}}/{{l}} осталось</b> · сброс {{t}} UTC",
   rlLow:"⚠ Осталось <b>{{r}} запросов</b>.",rlOut:"⛔ Лимит. Снова с <b>{{t}} UTC</b>.",
   setTitle:"Настройки",secAcc:"Аккаунт",secSync:"Синхронизация",secStore:"Хранилище",
@@ -663,6 +706,16 @@ en:{
   expFile:"praktikum-backup.json",impQ:"Import {{n}} companies?",impE:"Error: {{m}}",
   foot:"Data stored locally.",nPos:"No open position",nPosS:"No position",
   fPrio:"Priority:",
+  openDate:"Opens",deadline:"Deadline",datesAi:"AI estimate — verify on company site",
+  datesConfirm:"Confirm",datesFind:"📅 Find dates",datesFinding:"Looking up dates…",
+  datesFindOk:"Dates found (AI estimate).",datesFindEmpty:"No dates found.",
+  datesFindDisc:"AI estimates these dates — always verify on the official company website!",
+  sentAgo:"sent {{d}} days ago",sentToday:"sent today",followUp:"⚡ Follow-up?",
+  dlUrgent:"🔴 {{d}}d",dlSoon:"🟡 {{d}}d",dlFar:"{{d}}d",dlPassed:"Passed",
+  openSoon:"📅 Opens in {{d}}d",openToday:"📅 Opens today!",openPassed:"Open for {{d}}d",
+  fDeadline:"Deadline:",fdSoon:"Deadline ≤7d",fdMonth:"Deadline ≤30d",fdOpen:"Opening soon",fdFollowup:"Follow-up needed",
+  sortLabel:"Sort:",sortPrio:"Priority",sortDeadline:"Nearest deadline",sortSent:"Oldest first",sortName:"A–Z",
+  wrongDateHint:"Date wrong? Just correct it and save — it will be marked as confirmed.",
   rl:"Requests: <b>{{r}}/{{l}} left</b> · resets {{t}} UTC",
   rlLow:"⚠ Only <b>{{r}} requests</b> left.",rlOut:"⛔ Limit reached. Again at <b>{{t}} UTC</b>.",
   setTitle:"Settings",secAcc:"Account",secSync:"Sync",secStore:"Storage",
@@ -715,6 +768,46 @@ let ghPat=localStorage.getItem(SK_PAT)||"";
 let gistId=localStorage.getItem(SK_GIST)||"";
 let syncTs=parseInt(localStorage.getItem(SK_STS)||"0");
 let activeFilter="all",activePrios=new Set(),searchTerm="",expandedId=null;
+let sortMode="prio"; // prio | deadline | sent | name
+let activeDateFilters=new Set(); // fdSoon | fdMonth | fdOpen | fdFollowup
+
+// ── Date helpers ─────────────────────────────────────────
+function daysDiff(isoDate){
+  if(!isoDate)return null;
+  const d=new Date(isoDate),now=new Date();
+  now.setHours(0,0,0,0);d.setHours(0,0,0,0);
+  return Math.round((d-now)/(1000*60*60*24));
+}
+function dlBadgeHtml(isoDate){
+  if(!isoDate)return"";
+  const d=daysDiff(isoDate);
+  if(d===null)return"";
+  if(d<0)return`<span class="dl-badge dl-passed">${t("dlPassed")}</span>`;
+  if(d<=3)return`<span class="dl-badge dl-urgent">${t("dlUrgent",{d})}</span>`;
+  if(d<=14)return`<span class="dl-badge dl-soon">${t("dlSoon",{d})}</span>`;
+  return`<span class="dl-badge dl-far">${t("dlFar",{d})}</span>`;
+}
+function openBadgeHtml(isoDate){
+  if(!isoDate)return"";
+  const d=daysDiff(isoDate);
+  if(d===null)return"";
+  if(d>30)return"";
+  if(d>0)return`<span class="open-badge">${t("openSoon",{d})}</span>`;
+  if(d===0)return`<span class="open-badge">${t("openToday")}</span>`;
+  if(d>=-7)return`<span class="open-badge">${t("openPassed",{d:Math.abs(d)})}</span>`;
+  return"";
+}
+function sentAgoBadge(c){
+  if(!c.sentDate||c.status==="not_sent")return"";
+  const d=daysDiff(c.sentDate);
+  if(d===null)return"";
+  const daysSent=Math.abs(d);
+  const needFollowup=daysSent>=14&&(c.status==="sent");
+  if(daysSent===0)return`<span class="sent-ago">${t("sentToday")}</span>`;
+  const cls=needFollowup?"sent-ago followup":"sent-ago";
+  const label=t("sentAgo",{d:daysSent});
+  return`<span class="${cls}">${label}${needFollowup?" "+t("followUp"):""}</span>`;
+}
 let fileHandle=null,asState="disconnected",rlCache={},syncState="none";
 
 function t(k,v={}){let s=I18N[lang][k]||I18N.en[k]||k;Object.entries(v).forEach(([a,b])=>s=s.replace(`{{${a}}}`,b));return s;}
@@ -1006,10 +1099,34 @@ function renderFilters(){
   let h=`<button class="chip${activeFilter==="all"?" active":""}" data-f="all">${t("all")} (${companies.length})</button>`;
   STATUSES.forEach((s,i)=>{const n=companies.filter(c=>c.status===s).length;h+=`<button class="chip${activeFilter===s?" active":""}" data-f="${s}">${sl[i]} (${n})</button>`;});
   document.getElementById("filterRow").innerHTML=h;
+
+  // Priority row
   const PA=[{v:"A",l:`⭐ A (${companies.filter(c=>c.priority==="A").length})`,c:"pA"},{v:"B",l:`🔵 B (${companies.filter(c=>c.priority==="B").length})`,c:"pB"},{v:"C",l:`⚪ C (${companies.filter(c=>c.priority==="C").length})`,c:"pC"},{v:"none",l:`— (${companies.filter(c=>!c.priority).length})`,c:"pN"},{v:"nopos",l:`🚫 ${t("nPosS")} (${companies.filter(c=>c.noPosition).length})`,c:"pX"}];
   let ph=`<span style="font-size:11px;color:var(--faint);padding:5px 4px 5px 0;flex-shrink:0;">${t("fPrio")}</span>`;
   PA.forEach(p=>ph+=`<button class="chip ${p.c}${activePrios.has(p.v)?" active":""}" data-pf="${p.v}">${p.l}</button>`);
   document.getElementById("prioRow").innerHTML=ph;
+
+  // Date filter row
+  const now=new Date();now.setHours(0,0,0,0);
+  const cntSoon=companies.filter(c=>{const d=daysDiff(c.deadline);return d!==null&&d>=0&&d<=7;}).length;
+  const cntMonth=companies.filter(c=>{const d=daysDiff(c.deadline);return d!==null&&d>=0&&d<=30;}).length;
+  const cntOpen=companies.filter(c=>{const d=daysDiff(c.openDate);return d!==null&&d>=0&&d<=14;}).length;
+  const cntFollowup=companies.filter(c=>{const d=daysDiff(c.sentDate);return c.status==="sent"&&d!==null&&Math.abs(d)>=14;}).length;
+  const DF=[
+    {v:"fdSoon",l:`🔴 ${t("fdSoon")} (${cntSoon})`},
+    {v:"fdMonth",l:`🟡 ${t("fdMonth")} (${cntMonth})`},
+    {v:"fdOpen",l:`📅 ${t("fdOpen")} (${cntOpen})`},
+    {v:"fdFollowup",l:`⚡ ${t("fdFollowup")} (${cntFollowup})`},
+  ];
+  let dh=`<span style="font-size:11px;color:var(--faint);padding:5px 4px 5px 0;flex-shrink:0;">${t("fDeadline")}</span>`;
+  DF.forEach(f=>dh+=`<button class="chip${activeDateFilters.has(f.v)?" active":""}" data-df="${f.v}">${f.l}</button>`);
+  document.getElementById("dateRow").innerHTML=dh;
+
+  // Sort row
+  const SORTS=[{v:"prio",l:t("sortPrio")},{v:"deadline",l:t("sortDeadline")},{v:"sent",l:t("sortSent")},{v:"name",l:t("sortName")}];
+  let sh=`<span style="font-size:11px;color:var(--faint);flex-shrink:0;">${t("sortLabel")}</span>`;
+  SORTS.forEach(s=>sh+=`<button class="sort-chip${sortMode===s.v?" active":""}" data-sort="${s.v}">${s.l}</button>`);
+  document.getElementById("sortRow").innerHTML=sh;
 }
 
 const PO={"A":0,"B":1,"C":2,"":3};
@@ -1021,8 +1138,29 @@ function getFiltered(){
       const ok=(activePrios.has("A")&&c.priority==="A")||(activePrios.has("B")&&c.priority==="B")||(activePrios.has("C")&&c.priority==="C")||(activePrios.has("none")&&!c.priority)||(activePrios.has("nopos")&&c.noPosition);
       if(!ok)return false;
     }
+    if(activeDateFilters.size>0){
+      let dateOk=false;
+      if(activeDateFilters.has("fdSoon")){const d=daysDiff(c.deadline);if(d!==null&&d>=0&&d<=7)dateOk=true;}
+      if(activeDateFilters.has("fdMonth")){const d=daysDiff(c.deadline);if(d!==null&&d>=0&&d<=30)dateOk=true;}
+      if(activeDateFilters.has("fdOpen")){const d=daysDiff(c.openDate);if(d!==null&&d>=0&&d<=14)dateOk=true;}
+      if(activeDateFilters.has("fdFollowup")){const d=daysDiff(c.sentDate);if(c.status==="sent"&&d!==null&&Math.abs(d)>=14)dateOk=true;}
+      if(!dateOk)return false;
+    }
     return true;
-  }).sort((a,b)=>(PO[a.priority||""]??3)-(PO[b.priority||""]??3));
+  }).sort((a,b)=>{
+    if(sortMode==="deadline"){
+      const da=a.deadline?daysDiff(a.deadline):9999,db=b.deadline?daysDiff(b.deadline):9999;
+      const ra=da===null?9999:da<0?9998:da,rb=db===null?9999:db<0?9998:db;
+      return ra-rb||(PO[a.priority||""]??3)-(PO[b.priority||""]??3);
+    }
+    if(sortMode==="sent"){
+      const da=a.sentDate?new Date(a.sentDate):new Date(9999,0),db=b.sentDate?new Date(b.sentDate):new Date(9999,0);
+      return da-db;
+    }
+    if(sortMode==="name")return a.name.localeCompare(b.name);
+    // default: priority
+    return(PO[a.priority||""]??3)-(PO[b.priority||""]??3);
+  });
 }
 
 function renderList(){
@@ -1045,10 +1183,24 @@ function cardHtml(c){
   const npb=c.noPosition?`<span class="npos">🚫 ${t("nPosS")}</span>`:"";
   const ptg=c.profession?`<span class="ptag">🎓 ${esc(c.profession)}</span>`:"";
   const pOpts=[`<option value="">${t("prioN")}</option>`,...["A","B","C"].map(v=>`<option value="${v}"${c.priority===v?" selected":""}>${v==="A"?"⭐":v==="B"?"🔵":"⚪"} ${v}</option>`)].join("");
+  // Date badges for card header
+  const dlBadge=dlBadgeHtml(c.deadline);
+  const opBadge=c.status==="not_sent"?openBadgeHtml(c.openDate):"";
+  const agoStr=sentAgoBadge(c);
+  const aiDateBadge=(c.datesFromAi&&!c.datesConfirmed)?`<span class="ai-date-badge">~${t("datesAi")}</span>`:"";
+
   return`<article class="card" data-id="${c.id}" style="--c:${col}">
 <div class="card-main">${pb}
-  <div class="card-info"><h3>${esc(c.name)}${npb}</h3>
-    <div class="meta"><span class="slbl">${sl[si2]}</span>${c.sentDate?`<span class="dlbl">· ${fDate(c.sentDate)}</span>`:""}${ptg}${c.contactName?`<span class="dlbl">· ${esc(c.contactName)}</span>`:""}</div>
+  <div class="card-info">
+    <h3>${esc(c.name)}${npb}</h3>
+    <div class="meta">
+      <span class="slbl">${sl[si2]}</span>
+      ${c.sentDate?`<span class="dlbl">· ${fDate(c.sentDate)}</span>`:""}
+      ${agoStr}
+      ${ptg}
+      ${dlBadge}${opBadge}
+      ${aiDateBadge}
+    </div>
   </div>
   <select class="ssel" data-action="status">${opts}</select>
   <button class="ibtn" data-action="toggle">${isOpen?t("col"):t("det")}</button>
@@ -1056,6 +1208,27 @@ function cardHtml(c){
 </div>
 ${isOpen?`<div class="detail">
   <div class="det-links">${lh}</div>
+
+  <!-- Dates section -->
+  <div style="background:rgba(245,185,78,.06);border:1px solid rgba(245,185,78,.15);border-radius:9px;padding:12px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <span style="font-size:12px;font-weight:650;color:var(--s3);">📅 ${t("openDate")} / ${t("deadline")}</span>
+      <button class="btn-ai" data-action="dates" style="font-size:11px;padding:5px 9px;">✨ <span>${t("datesFind")}</span></button>
+    </div>
+    ${(c.datesFromAi&&!c.datesConfirmed)?`<p style="font-size:11px;color:var(--s3);margin-bottom:8px;">⚠ ${t("datesFindDisc")}<br><span style="color:var(--faint);">${t("wrongDateHint")}</span></p>`:""}
+    <div class="fgrid" style="margin:0;">
+      <div class="field">
+        <label>${t("openDate")}</label>
+        <input type="date" data-f="openDate" value="${esc(c.openDate||"")}">
+      </div>
+      <div class="field">
+        <label>${t("deadline")}</label>
+        <input type="date" data-f="deadline" value="${esc(c.deadline||"")}">
+      </div>
+    </div>
+    <div class="ai-st" data-role="dates-st" style="margin-top:6px;"></div>
+  </div>
+
   <div class="fgrid" style="margin-bottom:10px;">
     <div class="field"><label>${t("prof")}</label><input data-f="profession" value="${esc(c.profession)}" placeholder="${t("profPh")}"></div>
     <div class="field"><label>${t("prio")}</label><select data-f="priority">${pOpts}</select></div>
@@ -1079,10 +1252,26 @@ ${isOpen?`<div class="detail">
 }
 
 // ── Mutations ─────────────────────────────────────────────
-function addC(d){companies.unshift({id:uid(),name:d.name,status:"not_sent",sentDate:"",profession:d.profession||"",priority:d.priority||"",noPosition:false,website:d.website||"",phone:d.phone||"",contactName:d.contactName||"",contactRole:d.contactRole||"",email:d.email||"",address:d.address||"",notes:d.notes||""});saveC();render();}
+function addC(d){companies.unshift({id:uid(),name:d.name,status:"not_sent",sentDate:"",
+  profession:d.profession||"",priority:d.priority||"",noPosition:false,
+  openDate:"",deadline:"",datesFromAi:false,datesConfirmed:false,
+  website:d.website||"",phone:d.phone||"",contactName:d.contactName||"",
+  contactRole:d.contactRole||"",email:d.email||"",address:d.address||"",notes:d.notes||""});saveC();render();}
 function delC(id){if(!confirm(t("delQ")))return;companies=companies.filter(c=>c.id!==id);if(expandedId===id)expandedId=null;saveC();render();}
 function setSt(id,status){const c=companies.find(c=>c.id===id);if(!c)return;c.status=status;if(status!=="not_sent"&&!c.sentDate)c.sentDate=today();saveC();render();}
-function saveDet(id,card){const c=companies.find(c=>c.id===id);if(!c)return;card.querySelectorAll("[data-f]").forEach(el=>{if(el.type==="checkbox")c[el.dataset.f]=el.checked;else c[el.dataset.f]=el.value.trim();});saveC();render();}
+function saveDet(id,card){
+  const c=companies.find(c=>c.id===id);if(!c)return;
+  const oldOpen=c.openDate,oldDl=c.deadline;
+  card.querySelectorAll("[data-f]").forEach(el=>{
+    if(el.type==="checkbox")c[el.dataset.f]=el.checked;
+    else c[el.dataset.f]=el.value.trim();
+  });
+  // If user changed a date manually → mark as confirmed
+  if((c.openDate!==oldOpen||c.deadline!==oldDl)&&c.datesFromAi){
+    c.datesConfirmed=true;
+  }
+  saveC();render();
+}
 
 // ── Modal ─────────────────────────────────────────────────
 const addModal=document.getElementById("addModal");
@@ -1205,7 +1394,27 @@ function wireEvents(){
     const id=card.dataset.id,action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
     if(action==="toggle"){expandedId=expandedId===id?null:id;render();}
     else if(action==="del")delC(id);
-    else if(action==="save")saveDet(id,card);
+    else if(action==="dates"){
+      const c=companies.find(c=>c.id===id);if(!c)return;
+      const stEl=card.querySelector("[data-role='dates-st']");
+      const btn=e.target.closest("[data-action='dates']");
+      if(!stEl||!btn)return;
+      btn.disabled=true;
+      stEl.className="ai-st loading";stEl.textContent=t("datesFinding");
+      (async()=>{try{
+        const result=await findDatesAi(c.name,c.profession);
+        if(!result.openDate&&!result.deadline){
+          stEl.className="ai-st";stEl.textContent=t("datesFindEmpty");
+        }else{
+          if(result.openDate){c.openDate=result.openDate;const el=card.querySelector("[data-f='openDate']");if(el)el.value=result.openDate;}
+          if(result.deadline){c.deadline=result.deadline;const el=card.querySelector("[data-f='deadline']");if(el)el.value=result.deadline;}
+          c.datesFromAi=true;c.datesConfirmed=false;
+          saveC();render();
+          stEl.className="ai-st ok";stEl.textContent=t("datesFindOk")+" "+t("datesFindDisc");
+        }
+      }catch(err){stEl.className="ai-st err";stEl.textContent=aiErr(err);}
+      finally{btn.disabled=false;}})();
+    }
     else if(action==="ai"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       const pr=card.querySelector("[data-f='profession']")?.value||c.profession||"";
@@ -1221,6 +1430,8 @@ function wireEvents(){
   });
   document.getElementById("filterRow").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){activeFilter=b.dataset.f;render();}});
   document.getElementById("prioRow").addEventListener("click",e=>{const b=e.target.closest("[data-pf]");if(b){const v=b.dataset.pf;if(activePrios.has(v))activePrios.delete(v);else activePrios.add(v);render();}});
+  document.getElementById("dateRow").addEventListener("click",e=>{const b=e.target.closest("[data-df]");if(b){const v=b.dataset.df;if(activeDateFilters.has(v))activeDateFilters.delete(v);else activeDateFilters.add(v);render();}});
+  document.getElementById("sortRow").addEventListener("click",e=>{const b=e.target.closest("[data-sort]");if(b){sortMode=b.dataset.sort;render();}});
   document.getElementById("searchInp").addEventListener("input",e=>{searchTerm=e.target.value;renderList();});
 
   // Discovery panel
@@ -1434,7 +1645,25 @@ function playChime(){
   }catch(e){}
 }
 
-// ── Company Discovery ─────────────────────────────────────
+// ── AI date finder ────────────────────────────────────────
+async function findDatesAi(name, prof){
+  const nowStr=new Date().toISOString().slice(0,10);
+  const sys=`You are a research assistant. Find Austrian company Ferialpraktikum/internship application window dates.
+Return ONLY valid JSON no markdown: {"openDate":"YYYY-MM-DD","deadline":"YYYY-MM-DD","notes":"","confidence":"high|medium|low"}
+Use empty string if not found. Today: ${nowStr}. Never invent specific dates — if unsure use empty string.`;
+  const usr=`Company: "${name}", Austria. ${prof?`Profession: "${prof}".`:""} Find: when applications OPEN (Bewerbungsstart) and the DEADLINE (Bewerbungsschluss) for internship/Ferialpraktikum.`;
+  const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
+    body:JSON.stringify({model:"compound-beta-mini",messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.1,max_completion_tokens:200})
+  });
+  try{updRl(res.headers);}catch(e){}
+  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
+  const d=await res.json();
+  const raw=d.choices?.[0]?.message?.content||"";
+  const m=raw.match(/\{[\s\S]*?\}/);if(!m)throw new Error("bad json");
+  return JSON.parse(m[0]);
+}
 let discPage=0,discProf="",discLoc="",discAllResults=[];
 
 function buildDiscPrompt(prof,loc,exclude,page){
