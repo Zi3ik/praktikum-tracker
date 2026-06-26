@@ -1025,6 +1025,20 @@ async function writeToFile(){if(!fileHandle)return;try{const p=await fileHandle.
 function esc(s){return(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function fDate(iso){if(!iso)return"";const d=new Date(iso);return isNaN(d)?"":d.toLocaleDateString("de-AT");}
 function today(){return new Date().toISOString().slice(0,10);}
+function toEuDate(iso){
+  if(!iso)return"";
+  const p=iso.split("-");if(p.length!==3)return iso;
+  return`${p[2]}.${p[1]}.${p[0]}`;
+}
+function parseDate(v){
+  if(!v)return"";v=v.trim();if(!v)return"";
+  if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+  const eu=/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(v);
+  if(eu)return`${eu[3]}-${eu[2].padStart(2,"0")}-${eu[1].padStart(2,"0")}`;
+  const sl=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v);
+  if(sl)return`${sl[3]}-${sl[2].padStart(2,"0")}-${sl[1].padStart(2,"0")}`;
+  return"";
+}
 function si(id,v,html){const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}}
 
 function renderSettings(){
@@ -1233,11 +1247,11 @@ ${isOpen?`<div class="detail">
     <div class="fgrid" style="margin:0;">
       <div class="field">
         <label>${t("openDate")}</label>
-        <input type="date" data-f="openDate" value="${esc(c.openDate||"")}">
+        <input type="text" data-f="openDate" data-dtype="date" value="${esc(toEuDate(c.openDate))}" placeholder="TT.MM.JJJJ">
       </div>
       <div class="field">
         <label>${t("deadline")}</label>
-        <input type="date" data-f="deadline" value="${esc(c.deadline||"")}">
+        <input type="text" data-f="deadline" data-dtype="date" value="${esc(toEuDate(c.deadline))}" placeholder="TT.MM.JJJJ">
       </div>
     </div>
     <div class="ai-st" data-role="dates-st" style="margin-top:6px;"></div>
@@ -1257,7 +1271,7 @@ ${isOpen?`<div class="detail">
     <div class="field"><label>${t("role")}</label><input data-f="contactRole" value="${esc(c.contactRole)}"></div>
     <div class="field"><label>${t("email")}</label><input data-f="email" value="${esc(c.email)}"></div>
     <div class="field"><label>${t("addr")}</label><input data-f="address" value="${esc(c.address)}"></div>
-    <div class="field"><label>${t("sDate")}</label><input type="date" data-f="sentDate" value="${c.sentDate||""}"></div>
+    <div class="field"><label>${t("sDate")}</label><input type="text" data-f="sentDate" data-dtype="date" value="${esc(toEuDate(c.sentDate))}" placeholder="TT.MM.JJJJ"></div>
   </div>
   <div class="field"><label>${t("notes")}</label><textarea data-f="notes">${esc(c.notes)}</textarea></div>
   <div class="det-actions"><button class="btn-prim" data-action="save">${t("saveC")}</button></div>
@@ -1278,9 +1292,9 @@ function saveDet(id,card){
   const oldOpen=c.openDate,oldDl=c.deadline;
   card.querySelectorAll("[data-f]").forEach(el=>{
     if(el.type==="checkbox")c[el.dataset.f]=el.checked;
+    else if(el.dataset.dtype==="date")c[el.dataset.f]=parseDate(el.value);
     else c[el.dataset.f]=el.value.trim();
   });
-  // If user changed a date manually → mark as confirmed
   if((c.openDate!==oldOpen||c.deadline!==oldDl)&&c.datesFromAi){
     c.datesConfirmed=true;
   }
