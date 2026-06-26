@@ -1223,7 +1223,10 @@ ${isOpen?`<div class="detail">
   <!-- Dates section -->
   <div style="background:rgba(245,185,78,.06);border:1px solid rgba(245,185,78,.15);border-radius:9px;padding:12px;margin-bottom:12px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <span style="font-size:12px;font-weight:650;color:var(--s3);">📅 ${t("openDate")} / ${t("deadline")}</span>
+      <div>
+        <span style="font-size:12px;font-weight:650;color:var(--s3);">📅 ${t("openDate")} / ${t("deadline")}</span>
+        <span style="font-size:11px;color:var(--faint);margin-left:8px;">${{"de":"(selbst eintragen oder KI suchen lassen)","ru":"(вписать вручную или найти через ИИ)","en":"(enter manually or search with AI)"}[lang]||""}</span>
+      </div>
       <button class="btn-ai" data-action="dates" style="font-size:11px;padding:5px 9px;">✨ <span>${t("datesFind")}</span></button>
     </div>
     ${(c.datesFromAi&&!c.datesConfirmed&&(c.openDate||c.deadline))?`<p style="font-size:11px;color:var(--faint);margin-bottom:8px;">💡 ${t("datesFindDisc")}</p>`:""}
@@ -1659,11 +1662,16 @@ function playChime(){
 
 // ── AI date finder ────────────────────────────────────────
 async function findDatesAi(name, prof){
-  const nowStr=new Date().toISOString().slice(0,10);
+  const now=new Date();
+  const nowStr=now.toISOString().slice(0,10);
+  const year=now.getFullYear();
+  const nextYear=year+1;
   const sys=`You are a research assistant. Find Austrian company Ferialpraktikum/internship application window dates.
+Today is ${nowStr}. You MUST return only FUTURE or current dates (${nowStr} or later).
+If a company has annual deadlines and the ${year} deadline has already passed, return the ${nextYear} date instead.
 Return ONLY valid JSON no markdown: {"openDate":"YYYY-MM-DD","deadline":"YYYY-MM-DD","notes":"","confidence":"high|medium|low"}
-Use empty string if not found. Today: ${nowStr}. Never invent specific dates — if unsure use empty string.`;
-  const usr=`Company: "${name}", Austria. ${prof?`Profession: "${prof}".`:""} Find: when applications OPEN (Bewerbungsstart) and the DEADLINE (Bewerbungsschluss) for internship/Ferialpraktikum.`;
+Use empty string if genuinely not found or unknown. Never invent dates — if unsure use empty string.`;
+  const usr=`Company: "${name}", Austria.${prof?` Profession: "${prof}".`:""} Find UPCOMING (future) dates: when applications OPEN (Bewerbungsstart) and the DEADLINE (Bewerbungsschluss/Einsendeschluss) for Ferialpraktikum/internship. Today: ${nowStr}.`;
   const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
@@ -1674,7 +1682,21 @@ Use empty string if not found. Today: ${nowStr}. Never invent specific dates —
   const d=await res.json();
   const raw=d.choices?.[0]?.message?.content||"";
   const m=raw.match(/\{[\s\S]*?\}/);if(!m)throw new Error("bad json");
-  return JSON.parse(m[0]);
+  const result=JSON.parse(m[0]);
+  // Post-process: if date is in the past, try shifting it one year forward
+  function shiftIfPast(iso){
+    if(!iso)return iso;
+    const diff=daysDiff(iso);
+    if(diff!==null&&diff<0){
+      const shifted=new Date(iso);
+      shifted.setFullYear(shifted.getFullYear()+1);
+      return shifted.toISOString().slice(0,10);
+    }
+    return iso;
+  }
+  result.openDate=shiftIfPast(result.openDate);
+  result.deadline=shiftIfPast(result.deadline);
+  return result;
 }
 let discPage=0,discProf="",discLoc="",discAllResults=[];
 
