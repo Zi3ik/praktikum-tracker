@@ -350,7 +350,6 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
 
   <div class="frow" id="filterRow"></div>
   <div class="frow" id="prioRow"></div>
-  <div class="frow" id="dateRow"></div>
   <div class="sort-row" id="sortRow"></div>
   <div class="search-row"><input class="search-inp" id="searchInp" type="text"></div>
 
@@ -776,7 +775,7 @@ let gistId=localStorage.getItem(SK_GIST)||"";
 let syncTs=parseInt(localStorage.getItem(SK_STS)||"0");
 let activeFilter="all",activePrios=new Set(),searchTerm="",expandedId=null;
 let sortMode="prio"; // prio | deadline | sent | name
-let activeDateFilters=new Set(); // fdSoon | fdMonth | fdOpen | fdFollowup
+let activeDateFilters=new Set(); // kept for compat, unused
 
 // ── Date helpers ─────────────────────────────────────────
 function daysDiff(isoDate){
@@ -785,36 +784,14 @@ function daysDiff(isoDate){
   now.setHours(0,0,0,0);d.setHours(0,0,0,0);
   return Math.round((d-now)/(1000*60*60*24));
 }
-function dlBadgeHtml(isoDate){
-  if(!isoDate)return"";
-  const d=daysDiff(isoDate);
-  if(d===null)return"";
-  if(d<0)return`<span class="dl-badge dl-passed">${t("dlPassed")}</span>`;
-  if(d<=3)return`<span class="dl-badge dl-urgent">${t("dlUrgent",{d})}</span>`;
-  if(d<=14)return`<span class="dl-badge dl-soon">${t("dlSoon",{d})}</span>`;
-  return`<span class="dl-badge dl-far">${t("dlFar",{d})}</span>`;
-}
-function openBadgeHtml(isoDate){
-  if(!isoDate)return"";
-  const d=daysDiff(isoDate);
-  if(d===null)return"";
-  if(d>30)return""; // too far in future, not relevant yet
-  if(d>0)return`<span class="open-badge">${t("openSoon",{d})}</span>`;
-  if(d===0)return`<span class="open-badge">${t("openToday")}</span>`;
-  // Already open (d < 0) — show for up to 60 days
-  if(d>=-60)return`<span class="open-badge">${t("openPassed",{d:Math.abs(d)})}</span>`;
-  return"";
-}
+function dlBadgeHtml(){return"";}
+function openBadgeHtml(){return"";}
 function sentAgoBadge(c){
   if(!c.sentDate||c.status==="not_sent")return"";
-  const d=daysDiff(c.sentDate);
-  if(d===null)return"";
-  const daysSent=Math.abs(d);
-  const needFollowup=daysSent>=14&&(c.status==="sent");
-  if(daysSent===0)return`<span class="sent-ago">${t("sentToday")}</span>`;
-  const cls=needFollowup?"sent-ago followup":"sent-ago";
-  const label=t("sentAgo",{d:daysSent});
-  return`<span class="${cls}">${label}${needFollowup?" "+t("followUp"):""}</span>`;
+  const d=daysDiff(c.sentDate);if(d===null)return"";
+  const days=Math.abs(d);
+  if(days===0)return`<span class="sent-ago">${t("sentToday")}</span>`;
+  return`<span class="sent-ago">${t("sentAgo",{d:days})}</span>`;
 }
 let fileHandle=null,asState="disconnected",rlCache={},syncState="none";
 
@@ -1131,24 +1108,8 @@ function renderFilters(){
   PA.forEach(p=>ph+=`<button class="chip ${p.c}${activePrios.has(p.v)?" active":""}" data-pf="${p.v}">${p.l}</button>`);
   document.getElementById("prioRow").innerHTML=ph;
 
-  // Date filter row
-  const now=new Date();now.setHours(0,0,0,0);
-  const cntSoon=companies.filter(c=>{const d=daysDiff(c.deadline);return d!==null&&d>=0&&d<=7;}).length;
-  const cntMonth=companies.filter(c=>{const d=daysDiff(c.deadline);return d!==null&&d>=0&&d<=30;}).length;
-  const cntOpen=companies.filter(c=>{const d=daysDiff(c.openDate);return d!==null&&d>=0&&d<=14;}).length;
-  const cntFollowup=companies.filter(c=>{const d=daysDiff(c.sentDate);return c.status==="sent"&&d!==null&&Math.abs(d)>=14;}).length;
-  const DF=[
-    {v:"fdSoon",l:`🔴 ${t("fdSoon")} (${cntSoon})`},
-    {v:"fdMonth",l:`🟡 ${t("fdMonth")} (${cntMonth})`},
-    {v:"fdOpen",l:`📅 ${t("fdOpen")} (${cntOpen})`},
-    {v:"fdFollowup",l:`⚡ ${t("fdFollowup")} (${cntFollowup})`},
-  ];
-  let dh=`<span style="font-size:11px;color:var(--faint);padding:5px 4px 5px 0;flex-shrink:0;">${t("fDeadline")}</span>`;
-  DF.forEach(f=>dh+=`<button class="chip${activeDateFilters.has(f.v)?" active":""}" data-df="${f.v}">${f.l}</button>`);
-  document.getElementById("dateRow").innerHTML=dh;
-
   // Sort row
-  const SORTS=[{v:"prio",l:t("sortPrio")},{v:"deadline",l:t("sortDeadline")},{v:"sent",l:t("sortSent")},{v:"name",l:t("sortName")}];
+  const SORTS=[{v:"prio",l:t("sortPrio")},{v:"sent",l:t("sortSent")},{v:"name",l:t("sortName")}];
   let sh=`<span style="font-size:11px;color:var(--faint);flex-shrink:0;">${t("sortLabel")}</span>`;
   SORTS.forEach(s=>sh+=`<button class="sort-chip${sortMode===s.v?" active":""}" data-sort="${s.v}">${s.l}</button>`);
   document.getElementById("sortRow").innerHTML=sh;
@@ -1163,27 +1124,10 @@ function getFiltered(){
       const ok=(activePrios.has("A")&&c.priority==="A")||(activePrios.has("B")&&c.priority==="B")||(activePrios.has("C")&&c.priority==="C")||(activePrios.has("none")&&!c.priority)||(activePrios.has("nopos")&&c.noPosition);
       if(!ok)return false;
     }
-    if(activeDateFilters.size>0){
-      let dateOk=false;
-      if(activeDateFilters.has("fdSoon")){const d=daysDiff(c.deadline);if(d!==null&&d>=0&&d<=7)dateOk=true;}
-      if(activeDateFilters.has("fdMonth")){const d=daysDiff(c.deadline);if(d!==null&&d>=0&&d<=30)dateOk=true;}
-      if(activeDateFilters.has("fdOpen")){const d=daysDiff(c.openDate);if(d!==null&&d>=0&&d<=14)dateOk=true;}
-      if(activeDateFilters.has("fdFollowup")){const d=daysDiff(c.sentDate);if(c.status==="sent"&&d!==null&&Math.abs(d)>=14)dateOk=true;}
-      if(!dateOk)return false;
-    }
     return true;
   }).sort((a,b)=>{
-    if(sortMode==="deadline"){
-      const da=a.deadline?daysDiff(a.deadline):9999,db=b.deadline?daysDiff(b.deadline):9999;
-      const ra=da===null?9999:da<0?9998:da,rb=db===null?9999:db<0?9998:db;
-      return ra-rb||(PO[a.priority||""]??3)-(PO[b.priority||""]??3);
-    }
-    if(sortMode==="sent"){
-      const da=a.sentDate?new Date(a.sentDate):new Date(9999,0),db=b.sentDate?new Date(b.sentDate):new Date(9999,0);
-      return da-db;
-    }
+    if(sortMode==="sent"){const da=a.sentDate?new Date(a.sentDate):new Date(9999,0),db=b.sentDate?new Date(b.sentDate):new Date(9999,0);return da-db;}
     if(sortMode==="name")return a.name.localeCompare(b.name);
-    // default: priority
     return(PO[a.priority||""]??3)-(PO[b.priority||""]??3);
   });
 }
@@ -1208,11 +1152,7 @@ function cardHtml(c){
   const npb=c.noPosition?`<span class="npos">🚫 ${t("nPosS")}</span>`:"";
   const ptg=c.profession?`<span class="ptag">🎓 ${esc(c.profession)}</span>`:"";
   const pOpts=[`<option value="">${t("prioN")}</option>`,...["A","B","C"].map(v=>`<option value="${v}"${c.priority===v?" selected":""}>${v==="A"?"⭐":v==="B"?"🔵":"⚪"} ${v}</option>`)].join("");
-  // Date badges for card header
-  const dlBadge=dlBadgeHtml(c.deadline);
-  const opBadge=c.status==="not_sent"?openBadgeHtml(c.openDate):"";
   const agoStr=sentAgoBadge(c);
-  const aiDateBadge="";
 
   return`<article class="card" data-id="${c.id}" style="--c:${col}">
 <div class="card-main">${pb}
@@ -1223,8 +1163,6 @@ function cardHtml(c){
       ${c.sentDate?`<span class="dlbl">· ${fDate(c.sentDate)}</span>`:""}
       ${agoStr}
       ${ptg}
-      ${dlBadge}${opBadge}
-      ${aiDateBadge}
     </div>
   </div>
   <select class="ssel" data-action="status">${opts}</select>
@@ -1233,29 +1171,6 @@ function cardHtml(c){
 </div>
 ${isOpen?`<div class="detail">
   <div class="det-links">${lh}</div>
-
-  <!-- Dates section -->
-  <div style="background:rgba(245,185,78,.06);border:1px solid rgba(245,185,78,.15);border-radius:9px;padding:12px;margin-bottom:12px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-      <div>
-        <span style="font-size:12px;font-weight:650;color:var(--s3);">📅 ${t("openDate")} / ${t("deadline")}</span>
-        <span style="font-size:11px;color:var(--faint);margin-left:8px;">${{"de":"(selbst eintragen oder KI suchen lassen)","ru":"(вписать вручную или найти через ИИ)","en":"(enter manually or search with AI)"}[lang]||""}</span>
-      </div>
-      <button class="btn-ai" data-action="dates" style="font-size:11px;padding:5px 9px;">✨ <span>${t("datesFind")}</span></button>
-    </div>
-    ${(c.datesFromAi&&!c.datesConfirmed&&(c.openDate||c.deadline))?`<p style="font-size:11px;color:var(--faint);margin-bottom:8px;">💡 ${t("datesFindDisc")}</p>`:""}
-    <div class="fgrid" style="margin:0;">
-      <div class="field">
-        <label>${t("openDate")}</label>
-        <input type="text" data-f="openDate" data-dtype="date" value="${esc(toEuDate(c.openDate))}" placeholder="TT.MM.JJJJ">
-      </div>
-      <div class="field">
-        <label>${t("deadline")}</label>
-        <input type="text" data-f="deadline" data-dtype="date" value="${esc(toEuDate(c.deadline))}" placeholder="TT.MM.JJJJ">
-      </div>
-    </div>
-    <div class="ai-st" data-role="dates-st" style="margin-top:6px;"></div>
-  </div>
 
   <div class="fgrid" style="margin-bottom:10px;">
     <div class="field"><label>${t("prof")}</label><input data-f="profession" value="${esc(c.profession)}" placeholder="${t("profPh")}"></div>
@@ -1423,27 +1338,6 @@ function wireEvents(){
     const id=card.dataset.id,action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
     if(action==="toggle"){expandedId=expandedId===id?null:id;render();}
     else if(action==="del")delC(id);
-    else if(action==="dates"){
-      const c=companies.find(c=>c.id===id);if(!c)return;
-      const stEl=card.querySelector("[data-role='dates-st']");
-      const btn=e.target.closest("[data-action='dates']");
-      if(!stEl||!btn)return;
-      btn.disabled=true;
-      stEl.className="ai-st loading";stEl.textContent=t("datesFinding");
-      (async()=>{try{
-        const result=await findDatesAi(c.name,c.profession);
-        if(!result.openDate&&!result.deadline){
-          stEl.className="ai-st";stEl.textContent=t("datesFindEmpty");
-        }else{
-          if(result.openDate){c.openDate=result.openDate;const el=card.querySelector("[data-f='openDate']");if(el)el.value=result.openDate;}
-          if(result.deadline){c.deadline=result.deadline;const el=card.querySelector("[data-f='deadline']");if(el)el.value=result.deadline;}
-          c.datesFromAi=true;c.datesConfirmed=false;
-          saveC();render();
-          stEl.className="ai-st ok";stEl.textContent=t("datesFindOk")+" "+t("datesFindDisc");
-        }
-      }catch(err){stEl.className="ai-st err";stEl.textContent=aiErr(err);}
-      finally{btn.disabled=false;}})();
-    }
     else if(action==="ai"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       const pr=card.querySelector("[data-f='profession']")?.value||c.profession||"";
@@ -1453,13 +1347,13 @@ function wireEvents(){
         sf("contactRole",r.contactRole);sf("email",r.email);sf("address",r.address);sf("notes",r.notes);
       });
     }
+    else if(action==="save")saveDet(id,card);
   });
   document.getElementById("cardList").addEventListener("change",e=>{
     if(e.target.dataset.action==="status")setSt(e.target.closest(".card").dataset.id,e.target.value);
   });
   document.getElementById("filterRow").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){activeFilter=b.dataset.f;render();}});
   document.getElementById("prioRow").addEventListener("click",e=>{const b=e.target.closest("[data-pf]");if(b){const v=b.dataset.pf;if(activePrios.has(v))activePrios.delete(v);else activePrios.add(v);render();}});
-  document.getElementById("dateRow").addEventListener("click",e=>{const b=e.target.closest("[data-df]");if(b){const v=b.dataset.df;if(activeDateFilters.has(v))activeDateFilters.delete(v);else activeDateFilters.add(v);render();}});
   document.getElementById("sortRow").addEventListener("click",e=>{const b=e.target.closest("[data-sort]");if(b){sortMode=b.dataset.sort;render();}});
   document.getElementById("searchInp").addEventListener("input",e=>{searchTerm=e.target.value;renderList();});
 
