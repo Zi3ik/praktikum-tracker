@@ -225,6 +225,32 @@ select.ssel{background:var(--bg-el);border:1px solid var(--border);color:var(--t
 
 .empty{text-align:center;color:var(--faint);padding:50px 20px;font-size:13px;border:1px dashed var(--border);border-radius:14px;}
 
+/* Checklist */
+.cl-wrap{background:var(--bg-el);border:1px solid var(--border-s);border-radius:9px;padding:12px;margin-bottom:12px;}
+.cl-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.cl-title{font-size:12px;font-weight:650;color:var(--text);}
+.cl-progress{font-size:11px;color:var(--dim);}
+.cl-progress.all-done{color:var(--s4);font-weight:600;}
+.cl-prog-bar{height:3px;border-radius:99px;background:var(--border);margin-bottom:8px;overflow:hidden;}
+.cl-prog-fill{height:100%;border-radius:99px;background:var(--s4);transition:width .3s;}
+.cl-item{display:flex;align-items:center;gap:8px;padding:5px 2px;border-bottom:1px solid var(--border-s);}
+.cl-item:last-of-type{border-bottom:none;padding-bottom:0;}
+.cl-cb{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex:none;}
+.cl-label{flex:1;font-size:12.5px;color:var(--text);cursor:pointer;user-select:none;}
+.cl-label.done{color:var(--faint);text-decoration:line-through;}
+.cl-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:13px;padding:0 3px;line-height:1;flex:none;}
+.cl-del:hover{color:var(--danger);}
+.cl-add-row{display:flex;gap:7px;margin-top:9px;}
+.cl-add-inp{flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--text);
+  font-size:12px;padding:6px 9px;border-radius:7px;outline:none;font-family:inherit;}
+.cl-add-inp:focus{border-color:var(--accent);}
+.btn-cl-add{background:var(--glow);border:1px solid var(--accent);color:var(--accent2);
+  font-size:12px;font-weight:600;padding:6px 11px;border-radius:7px;cursor:pointer;white-space:nowrap;}
+.btn-cl-add:hover{background:var(--accent);color:#140c24;}
+.cl-badge{font-size:10px;color:var(--s4);background:rgba(79,214,147,.1);
+  border:1px solid rgba(79,214,147,.2);border-radius:5px;padding:1px 5px;white-space:nowrap;}
+.cl-badge.partial{color:var(--dim);background:var(--bg-el);border-color:var(--border);}
+
 /* Discovery panel */
 .disc-panel{background:var(--bg-card);border:1px solid var(--accent);border-radius:14px;
   margin-bottom:16px;overflow:hidden;
@@ -563,6 +589,9 @@ de:{
   eList:"Liste leer. «+ Firma» klicken.",eFilter:"Keine Treffer.",
   expFile:"praktikum-backup.json",impQ:"{{n}} Firmen importieren?",impE:"Fehler: {{m}}",
   foot:"Daten lokal gespeichert.",nPos:"Keine Stelle",nPosS:"Keine Stelle",
+  clTitle:"📋 Dokumente & Aufgaben",clAdd:"Hinzufügen",clPh:"Eigene Aufgabe…",
+  clDone:"{{n}} von {{t}} erledigt",
+  clDefaults:["CV / Lebenslauf","Motivationsschreiben","Zeugnis (letztes)","Anruf gemacht","E-Mail gesendet"],
   fPrio:"Priorität:",
   openDate:"Bewerbung ab",deadline:"Frist bis",datesAi:"KI-Schätzung — bitte prüfen",
   datesConfirm:"Bestätigen",datesFind:"📅 Fristen suchen",datesFinding:"Suche Fristen…",
@@ -637,6 +666,9 @@ ru:{
   eList:"Список пуст.",eFilter:"Ничего не найдено.",
   expFile:"praktikum-backup.json",impQ:"Импортировать {{n}} компаний?",impE:"Ошибка: {{m}}",
   foot:"Данные хранятся локально.",nPos:"Нет позиции",nPosS:"Нет позиции",
+  clTitle:"📋 Документы и задачи",clAdd:"Добавить",clPh:"Своя задача…",
+  clDone:"{{n}} из {{t}} выполнено",
+  clDefaults:["CV / Lebenslauf","Motivationsschreiben","Zeugnis (последний)","Позвонил","Письмо отправлено"],
   fPrio:"Приоритет:",
   openDate:"Приём с",deadline:"Дедлайн до",datesAi:"Оценка ИИ — проверь на сайте",
   datesConfirm:"Подтвердить",datesFind:"📅 Найти сроки",datesFinding:"Ищу сроки…",
@@ -711,6 +743,9 @@ en:{
   eList:"No companies yet. Click «+ Company».",eFilter:"No results.",
   expFile:"praktikum-backup.json",impQ:"Import {{n}} companies?",impE:"Error: {{m}}",
   foot:"Data stored locally.",nPos:"No open position",nPosS:"No position",
+  clTitle:"📋 Documents & Tasks",clAdd:"Add",clPh:"Custom task…",
+  clDone:"{{n}} of {{t}} done",
+  clDefaults:["CV / Lebenslauf","Motivationsschreiben","Zeugnis (latest)","Called them","Email sent"],
   fPrio:"Priority:",
   openDate:"Opens",deadline:"Deadline",datesAi:"AI estimate — verify on company site",
   datesConfirm:"Confirm",datesFind:"📅 Find dates",datesFinding:"Looking up dates…",
@@ -1152,6 +1187,10 @@ function cardHtml(c){
   const npb=c.noPosition?`<span class="npos">🚫 ${t("nPosS")}</span>`:"";
   const ptg=c.profession?`<span class="ptag">🎓 ${esc(c.profession)}</span>`:"";
   const pOpts=[`<option value="">${t("prioN")}</option>`,...["A","B","C"].map(v=>`<option value="${v}"${c.priority===v?" selected":""}>${v==="A"?"⭐":v==="B"?"🔵":"⚪"} ${v}</option>`)].join("");
+  // Checklist badge for header
+  ensureChecklist(c);
+  const clTotal=c.checklist.length,clDone=c.checklist.filter(x=>x.done).length;
+  const clBadge=clTotal>0?`<span class="cl-badge${clDone===clTotal?"":" partial"}">📋 ${clDone}/${clTotal}</span>`:"";
   const agoStr=sentAgoBadge(c);
 
   return`<article class="card" data-id="${c.id}" style="--c:${col}">
@@ -1163,6 +1202,7 @@ function cardHtml(c){
       ${c.sentDate?`<span class="dlbl">· ${fDate(c.sentDate)}</span>`:""}
       ${agoStr}
       ${ptg}
+      ${clBadge}
     </div>
   </div>
   <select class="ssel" data-action="status">${opts}</select>
@@ -1171,6 +1211,25 @@ function cardHtml(c){
 </div>
 ${isOpen?`<div class="detail">
   <div class="det-links">${lh}</div>
+
+  <!-- Checklist -->
+  <div class="cl-wrap">
+    <div class="cl-header">
+      <span class="cl-title">${t("clTitle")}</span>
+      <span class="cl-progress${clDone===clTotal&&clTotal>0?" all-done":""}">${t("clDone",{n:clDone,t:clTotal})}</span>
+    </div>
+    <div class="cl-prog-bar"><div class="cl-prog-fill" style="width:${clTotal?Math.round(clDone/clTotal*100):0}%"></div></div>
+    ${c.checklist.map(item=>`
+    <div class="cl-item" data-cl-id="${esc(item.id)}">
+      <input type="checkbox" class="cl-cb" data-action="cl-toggle" data-cl-id="${esc(item.id)}"${item.done?" checked":""}>
+      <label class="cl-label${item.done?" done":""}">${esc(item.label)}</label>
+      <button class="cl-del" data-action="cl-del" data-cl-id="${esc(item.id)}">✕</button>
+    </div>`).join("")}
+    <div class="cl-add-row">
+      <input type="text" class="cl-add-inp" data-role="cl-inp" placeholder="${t("clPh")}">
+      <button class="btn-cl-add" data-action="cl-add">${t("clAdd")}</button>
+    </div>
+  </div>
 
   <div class="fgrid" style="margin-bottom:10px;">
     <div class="field"><label>${t("prof")}</label><input data-f="profession" value="${esc(c.profession)}" placeholder="${t("profPh")}"></div>
@@ -1195,8 +1254,15 @@ ${isOpen?`<div class="detail">
 }
 
 // ── Mutations ─────────────────────────────────────────────
+function defaultChecklist(){
+  return(I18N[lang].clDefaults||I18N.de.clDefaults).map((label,i)=>({id:"def"+i,label,done:false}));
+}
+function ensureChecklist(c){
+  if(!c.checklist)c.checklist=[];
+}
 function addC(d){companies.unshift({id:uid(),name:d.name,status:"not_sent",sentDate:"",
   profession:d.profession||"",priority:d.priority||"",noPosition:false,
+  checklist:defaultChecklist(),
   openDate:"",deadline:"",datesFromAi:false,datesConfirmed:false,
   website:d.website||"",phone:d.phone||"",contactName:d.contactName||"",
   contactRole:d.contactRole||"",email:d.email||"",address:d.address||"",notes:d.notes||""});saveC();render();}
@@ -1338,6 +1404,30 @@ function wireEvents(){
     const id=card.dataset.id,action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
     if(action==="toggle"){expandedId=expandedId===id?null:id;render();}
     else if(action==="del")delC(id);
+    else if(action==="cl-toggle"){
+      const c=companies.find(c=>c.id===id);if(!c)return;
+      ensureChecklist(c);
+      const itemId=e.target.closest("[data-cl-id]").dataset.clId;
+      const item=c.checklist.find(x=>x.id===itemId);
+      if(item){item.done=e.target.checked;saveC();render();}
+    }
+    else if(action==="cl-del"){
+      const c=companies.find(c=>c.id===id);if(!c)return;
+      ensureChecklist(c);
+      const itemId=e.target.closest("[data-cl-id]").dataset.clId;
+      c.checklist=c.checklist.filter(x=>x.id!==itemId);
+      saveC();render();
+    }
+    else if(action==="cl-add"){
+      const c=companies.find(c=>c.id===id);if(!c)return;
+      ensureChecklist(c);
+      const card=e.target.closest(".card");
+      const inp=card.querySelector("[data-role='cl-inp']");
+      const label=(inp?.value||"").trim();
+      if(!label)return;
+      c.checklist.push({id:"u"+Date.now().toString(36),label,done:false});
+      saveC();render();
+    }
     else if(action==="ai"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       const pr=card.querySelector("[data-f='profession']")?.value||c.profession||"";
@@ -1355,7 +1445,15 @@ function wireEvents(){
   document.getElementById("filterRow").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(b){activeFilter=b.dataset.f;render();}});
   document.getElementById("prioRow").addEventListener("click",e=>{const b=e.target.closest("[data-pf]");if(b){const v=b.dataset.pf;if(activePrios.has(v))activePrios.delete(v);else activePrios.add(v);render();}});
   document.getElementById("sortRow").addEventListener("click",e=>{const b=e.target.closest("[data-sort]");if(b){sortMode=b.dataset.sort;render();}});
-  document.getElementById("searchInp").addEventListener("input",e=>{searchTerm=e.target.value;renderList();});
+  document.getElementById("cardList").addEventListener("keydown",e=>{
+    if(e.key!=="Enter"||e.target.dataset.role!=="cl-inp")return;
+    const card=e.target.closest(".card");if(!card)return;
+    const id=card.dataset.id,c=companies.find(c=>c.id===id);if(!c)return;
+    ensureChecklist(c);
+    const label=e.target.value.trim();if(!label)return;
+    c.checklist.push({id:"u"+Date.now().toString(36),label,done:false});
+    saveC();render();
+  });
 
   // Discovery panel
   document.getElementById("btnDiscover").addEventListener("click",()=>{
