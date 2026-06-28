@@ -575,7 +575,7 @@ de:{
   pdfColAufgaben:"Aufgaben",pdfColNotizen:"Notizen",
   pdfTotal:"Gesamt: {{n}} Firmen · Gesendet: {{s}} · Angenommen: {{a}}",
   pdfGenerating:"PDF wird erstellt…",
-  discProfPh:"Beruf / Fachrichtung",discLocPh:"Ort / Bezirk — z.B. Wien, 1220, Donaustadt",
+  discProfPh:"Beruf / Fachrichtung",discLocPh:"Ort — z.B. Wien, Zürich, München, Basel",
   discSearch:"Suchen",discMore:"Mehr anzeigen",discAdd:"+ Hinzufügen",discAdded:"✓ Dabei",
   discLoading:"Suche Firmen…",discAdding:"Füge hinzu & lade Infos…",
   discFound:"{{n}} neue Firmen gefunden:",discErrKey:"Ungültiger API-Schlüssel.",
@@ -588,7 +588,7 @@ de:{
   site:"Website",phone:"Telefon",cont:"Ansprechperson",role:"Position",
   email:"E-Mail",addr:"Adresse",notes:"Notizen",sDate:"Datum gesendet",
   aiFill:"KI-Daten suchen",aiDisc:"KI kann sich irren — bitte prüfen.",
-  aiLoc:"📍 Suchort für KI (optional)",aiLocPh:"z.B. Wien, 1220, Donaustadt — leer = überall",
+  aiLoc:"📍 Suchort für KI (optional)",aiLocPh:"z.B. Wien, Zürich, München — leer = überall",
   aiLoad:"Suche…",aiOk:"Fertig (Websuche).",aiOkN:"Fertig (ohne Live-Suche).",
   aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiENet:"Keine Verbindung zu Groq.",
   aiEKey:"Ungültiger API-Schlüssel.",aiEGen:"Fehler: {{m}}",
@@ -659,7 +659,7 @@ ru:{
   pdfColAufgaben:"Задачи",pdfColNotizen:"Заметки",
   pdfTotal:"Всего: {{n}} · Отправлено: {{s}} · Принято: {{a}}",
   pdfGenerating:"Создаю PDF…",
-  discProfPh:"Профессия / специальность",discLocPh:"Место — напр. Wien, 1220, 22 район",
+  discProfPh:"Профессия / специальность",discLocPh:"Место — напр. Wien, Zürich, München, Bern",
   discSearch:"Искать",discMore:"Ещё",discAdd:"+ Добавить",discAdded:"✓ Добавлено",
   discLoading:"Ищу компании…",discAdding:"Добавляю и загружаю данные…",
   discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",
@@ -672,7 +672,7 @@ ru:{
   site:"Сайт",phone:"Телефон",cont:"Контакт",role:"Должность",
   email:"Email",addr:"Адрес",notes:"Заметки",sDate:"Дата отправки",
   aiFill:"Найти через ИИ",aiDisc:"ИИ может ошибаться — проверяй.",
-  aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, 1220, Donaustadt — пусто = везде",
+  aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, Zürich, München — пусто = везде",
   aiLoad:"Ищу…",aiOk:"Готово (веб-поиск).",aiOkN:"Готово (без поиска).",
   aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Groq.",
   aiEKey:"Неверный API-ключ.",aiEGen:"Ошибка: {{m}}",
@@ -743,7 +743,7 @@ en:{
   pdfColAufgaben:"Tasks",pdfColNotizen:"Notes",
   pdfTotal:"Total: {{n}} · Sent: {{s}} · Accepted: {{a}}",
   pdfGenerating:"Generating PDF…",
-  discProfPh:"Profession / field",discLocPh:"Location — e.g. Vienna, 1220, Donaustadt",
+  discProfPh:"Profession / field",discLocPh:"Location — e.g. Vienna, Zurich, Munich, Bern",
   discSearch:"Search",discMore:"Load more",discAdd:"+ Add",discAdded:"✓ Added",
   discLoading:"Searching for companies…",discAdding:"Adding & loading info…",
   discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",
@@ -756,7 +756,7 @@ en:{
   site:"Website",phone:"Phone",cont:"Contact person",role:"Position",
   email:"Email",addr:"Address",notes:"Notes",sDate:"Date sent",
   aiFill:"Find data with AI",aiDisc:"AI may make mistakes — always verify.",
-  aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, 1220, Donaustadt — blank = anywhere",
+  aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, Zürich, Munich — blank = anywhere",
   aiLoad:"Searching…",aiOk:"Done (web search).",aiOkN:"Done (no web search).",
   aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Groq.",
   aiEKey:"Invalid API key.",aiEGen:"Error: {{m}}",
@@ -979,11 +979,11 @@ function renderSyncBar(){
 
 // ── AI ────────────────────────────────────────────────────
 function bPrompt(name,prof,loc){
-  const p=prof?` Student seeks "${prof}" internship.`:"";
-  const l=loc?` Focus on location: "${loc}", Austria.`:"";
+  const p=prof?` The student seeks a "${prof}" internship/Ferialpraktikum.`:"";
+  const l=loc?` Location: "${loc}".`:"";
   return{
-    sys:`Data lookup for Austrian HTL student Ferialpraktikum.${p}${l} Find: website, phone, HR email, contact person name+role, Austrian office address. Reply ONLY valid JSON no markdown: {"website":"","phone":"","email":"","contactName":"","contactRole":"","address":"","notes":""}. Empty if unknown. Never invent.`,
-    usr:`Company: "${name}", Austria.${prof?` "${prof}" internship contact.`:""}${loc?` In/near: "${loc}".`:""}`
+    sys:`You are a contact research assistant for an HTL student looking for a Ferialpraktikum (internship). Find: website, phone, HR/internship email, contact person name+role, office address.${p}${l} Reply ONLY valid JSON no markdown: {"website":"","phone":"","email":"","contactName":"","contactRole":"","address":"","notes":""}. Empty string if unknown. Never invent data.`,
+    usr:`Company: "${name}".${loc?` Location: "${loc}".`:""}${prof?` Seeking "${prof}" internship contact.`:""}`
   };
 }
 async function callGroq(mid,name,prof,loc){
@@ -1734,8 +1734,8 @@ function buildDiscPrompt(prof,loc,exclude,page){
   const excList=exclude.slice(0,30).join(", ")||"none";
   const variety=page>0?` Give ${page*5+1}-${page*5+5}th different results, not the first ones.`:"";
   return{
-    sys:`You help an Austrian HTL student (age 16-18) find Ferialpraktikum (summer internship) companies in Austria. Return ONLY valid JSON array, no markdown, no extra text: [{"name":"","description":"","address":"","website":""}]. Max 1 sentence description. Real Austrian companies only. Never return companies from the excluded list.`,
-    usr:`Find exactly 5 real companies offering "${prof}" internships in/near "${loc}", Austria. Exclude already contacted: [${excList}].${variety} Focus on companies reachable for a student in that area.`
+    sys:`You help an HTL student (age 16-18) find Ferialpraktikum (summer internship) companies. Return ONLY valid JSON array, no markdown: [{"name":"","description":"","address":"","website":""}]. Max 1 sentence description. Only real, verifiable companies. Never return companies from the excluded list.`,
+    usr:`Find exactly 5 real companies offering "${prof}" internships in/near "${loc}". Exclude already contacted: [${excList}].${variety} Focus on companies a student in that area could realistically apply to.`
   };
 }
 
