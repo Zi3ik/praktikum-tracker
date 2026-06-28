@@ -1732,10 +1732,21 @@ let discPage=0,discProf="",discLoc="",discAllResults=[];
 
 function buildDiscPrompt(prof,loc,exclude,page){
   const excList=exclude.slice(0,30).join(", ")||"none";
-  const variety=page>0?` Give ${page*5+1}-${page*5+5}th different results, not the first ones.`:"";
+  const variety=page>0?` Provide result set #${page+1} — different companies from previous results.`:"";
   return{
-    sys:`You help an HTL student (age 16-18) find Ferialpraktikum (summer internship) companies. Return ONLY valid JSON array, no markdown: [{"name":"","description":"","address":"","website":""}]. Max 1 sentence description. Only real, verifiable companies. Never return companies from the excluded list.`,
-    usr:`Find exactly 5 real companies offering "${prof}" internships in/near "${loc}". Exclude already contacted: [${excList}].${variety} Focus on companies a student in that area could realistically apply to.`
+    sys:`You are a company research assistant with web search. An HTL student needs Ferialpraktikum (summer internship) companies.
+CRITICAL RULES:
+- Return ONLY companies physically located IN "${loc}" — NOT in any other region or country
+- If you cannot find 5 companies in "${loc}", return fewer — do NOT substitute companies from other locations
+- Use web search to find REAL companies with actual internship programs
+- Return ONLY valid JSON array, no markdown, no explanation:
+[{"name":"","description":"one sentence","address":"city, country","website":""}]
+- Never invent companies. Never return excluded companies.`,
+    usr:`Find companies in "${loc}" offering "${prof}" internships/Ferialpraktikum.
+Must be IN: ${loc}
+Exclude (already have): [${excList}]
+${variety}
+Search the web for real companies in ${loc}.`
   };
 }
 
@@ -1745,7 +1756,7 @@ async function callGroqDisc(prof,loc,page){
   const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
     method:"POST",
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
-    body:JSON.stringify({model:"llama-3.3-70b-versatile",messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.7,max_completion_tokens:600})
+    body:JSON.stringify({model:"compound-beta-mini",messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.3,max_completion_tokens:700})
   });
   try{updRl(res.headers);}catch(e){}
   if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
