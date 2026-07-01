@@ -341,6 +341,7 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
       <button class="btn-ghost" id="btnSettings">⚙</button>
       <button class="btn-ghost" id="btnDiscover" style="color:var(--accent2);border-color:var(--accent);"></button>
       <button class="btn-ghost" id="btnPdf" style="color:var(--accent2);"></button>
+      <button class="btn-ghost" id="btnArchive"></button>
       <button class="btn-ghost" id="btnExport"></button>
       <button class="btn-ghost" id="btnImport"></button>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -581,6 +582,10 @@ de:{
   discFound:"{{n}} neue Firmen gefunden:",discErrKey:"Ungültiger API-Schlüssel.",
   discErrNet:"Keine Verbindung zu Groq.",discErrGen:"Fehler: {{m}}",
   discEmpty:"Keine neuen Firmen gefunden — versuche anderen Ort oder Beruf.",
+  archive:"Archiv",archiveBtn:"📦 Archivieren",unarchiveBtn:"↩ Wiederherstellen",
+  archiveConfirm:"Firma ins Archiv verschieben? Sie bleibt erhalten, wird aber ausgeblendet.",
+  archiveEmpty:"Archiv ist leer.",archiveCount:"{{n}} archiviert",
+  showArchive:"📦 Archiv anzeigen",hideArchive:"← Zurück zur Liste",
   st:["Nicht gesendet","Gesendet","Antwort","Interview","Angenommen","Abgelehnt"],
   det:"Details",col:"Schließen",save:"Speichern",del:"🗑",
   addTitle:"Neue Firma",name:"Firmenname",prof:"Beruf / Fachrichtung",profPh:"z.B. Elektrotechnik",
@@ -665,6 +670,10 @@ ru:{
   discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",
   discErrNet:"Нет связи с Groq.",discErrGen:"Ошибка: {{m}}",
   discEmpty:"Новых компаний не найдено — попробуй другое место или профессию.",
+  archive:"Архив",archiveBtn:"📦 В архив",unarchiveBtn:"↩ Восстановить",
+  archiveConfirm:"Переместить компанию в архив? Она сохранится, но исчезнет из списка.",
+  archiveEmpty:"Архив пуст.",archiveCount:"{{n}} в архиве",
+  showArchive:"📦 Показать архив",hideArchive:"← Назад к списку",
   st:["Не отправлено","Отправлено","Ответ","Собеседование","Принято","Отказ"],
   det:"Подробнее",col:"Свернуть",save:"Сохранить",del:"🗑",
   addTitle:"Новая компания",name:"Название",prof:"Профессия",profPh:"напр. Elektrotechnik",
@@ -749,6 +758,10 @@ en:{
   discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",
   discErrNet:"Cannot connect to Groq.",discErrGen:"Error: {{m}}",
   discEmpty:"No new companies found — try a different location or profession.",
+  archive:"Archive",archiveBtn:"📦 Archive",unarchiveBtn:"↩ Restore",
+  archiveConfirm:"Move company to archive? It stays saved but is hidden from the list.",
+  archiveEmpty:"Archive is empty.",archiveCount:"{{n}} archived",
+  showArchive:"📦 Show archive",hideArchive:"← Back to list",
   st:["Not sent","Sent","Response","Interview","Accepted","Rejected"],
   det:"Details",col:"Collapse",save:"Save",del:"🗑",
   addTitle:"New Company",name:"Company name",prof:"Profession / field",profPh:"e.g. Electrical Eng.",
@@ -833,6 +846,7 @@ let syncTs=parseInt(localStorage.getItem(SK_STS)||"0");
 let activeFilter="all",activePrios=new Set(),searchTerm="",expandedId=null;
 let sortMode="prio"; // prio | deadline | sent | name
 let activeDateFilters=new Set(); // kept for compat, unused
+let viewArchive=false;
 
 // ── Date helpers ─────────────────────────────────────────
 function daysDiff(isoDate){
@@ -856,7 +870,16 @@ function t(k,v={}){let s=I18N[lang][k]||I18N.en[k]||k;Object.entries(v).forEach(
 function ob(k){return(I18N[obLang]?.ob||I18N.en.ob)[k]||(I18N.en.ob)[k]||"";}
 
 // ── Storage ───────────────────────────────────────────────
-function loadC(){try{companies=JSON.parse(localStorage.getItem(SK)||"[]");}catch(e){companies=[];}}
+function loadC(){
+  try{companies=JSON.parse(localStorage.getItem(SK)||"[]");}catch(e){companies=[];}
+  // Migrate old records missing updatedAt/archived (needed for merge & archive features)
+  let migrated=false;
+  companies.forEach(c=>{
+    if(c.updatedAt===undefined){c.updatedAt=Date.now();migrated=true;}
+    if(c.archived===undefined){c.archived=false;migrated=true;}
+  });
+  if(migrated)localStorage.setItem(SK,JSON.stringify(companies));
+}
 function saveC(){localStorage.setItem(SK,JSON.stringify(companies));writeToFile();pushGist();}
 function uid(){return"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
@@ -886,6 +909,23 @@ async function ghFetch(method,path,body){
 // Gist payload always includes groqKey so the key syncs too
 function buildGistPayload(){return{updatedAt:Date.now(),groqKey,companies};}
 
+// Merges two company lists by id: for ids present in both, keeps whichever
+// has the newer updatedAt; ids present only on one side are kept as-is.
+// Note: this is a simple union merge with no delete-tombstones — if a
+// company was deleted on one device it may reappear after syncing from
+// another device that still has it. Good enough for a small personal list.
+function mergeCompanies(local,remote){
+  const map=new Map();
+  (local||[]).forEach(c=>map.set(c.id,c));
+  (remote||[]).forEach(rc=>{
+    const lc=map.get(rc.id);
+    if(!lc){map.set(rc.id,rc);return;}
+    const lt=lc.updatedAt||0,rt=rc.updatedAt||0;
+    if(rt>lt)map.set(rc.id,rc);
+  });
+  return Array.from(map.values());
+}
+
 async function pushGist(){
   if(!ghPat||!gistId)return;
   try{
@@ -905,10 +945,17 @@ async function pullGist(){
     const p=JSON.parse(raw);
     // Always update groqKey from gist (keeps keys in sync across devices)
     if(p.groqKey&&p.groqKey!==groqKey){groqKey=p.groqKey;localStorage.setItem(SK_GROQ,groqKey);}
-    if(p.updatedAt>syncTs||companies.length===0){
-      companies=p.companies||[];localStorage.setItem(SK,JSON.stringify(companies));
-      syncTs=p.updatedAt;localStorage.setItem(SK_STS,syncTs);render();
+    const remoteCompanies=p.companies||[];
+    const merged=mergeCompanies(companies,remoteCompanies);
+    const changed=JSON.stringify(merged)!==JSON.stringify(companies);
+    companies=merged;
+    localStorage.setItem(SK,JSON.stringify(companies));
+    render();
+    if(changed){
+      // Push the merged result back so the other device also gets our local-only changes
+      await ghFetch("PATCH","gists/"+gistId,{files:{[GF]:{content:JSON.stringify(buildGistPayload())}}});
     }
+    syncTs=Date.now();localStorage.setItem(SK_STS,syncTs);
     setSyncState("ok");renderSyncBar();
   }catch(e){setSyncState("err",e.message);}
 }
@@ -935,8 +982,11 @@ async function connectGist(pat){
     const found=await findExistingGist(pat);
     if(found){
       if(found.groqKey){groqKey=found.groqKey;localStorage.setItem(SK_GROQ,groqKey);}
-      if(found.companies.length>0){companies=found.companies;localStorage.setItem(SK,JSON.stringify(companies));}
+      companies=mergeCompanies(companies,found.companies||[]);
+      localStorage.setItem(SK,JSON.stringify(companies));
       syncTs=Date.now();localStorage.setItem(SK_STS,syncTs);
+      // Push merged result back so both sides converge
+      await ghFetch("PATCH","gists/"+gistId,{files:{[GF]:{content:JSON.stringify(buildGistPayload())}}});
     }else{
       // Create new gist with current data
       const created=await ghFetch("POST","gists",{description:"Praktikum Tracker Sync",public:false,files:{[GF]:{content:JSON.stringify(buildGistPayload())}}});
@@ -1121,6 +1171,8 @@ function renderSettings(){
 function applyI18n(){
   si("appSub",t("appSub"));si("btnAdd",t("add"));si("btnExport",t("exp"));si("btnImport",t("imp"));
   si("btnPdf",t("pdfBtn"));
+  const archCount=companies.filter(c=>c.archived).length;
+  si("btnArchive",viewArchive?t("hideArchive"):`${t("showArchive")}${archCount?" ("+archCount+")":""}`);
   si("btnDiscover",t("discBtn"));si("discTitle",t("discTitle"));si("discSearchBtn",t("discSearch"));
   const dp=document.getElementById("discProf"),dl=document.getElementById("discLoc");
   if(dp&&!dp.value)dp.placeholder=t("discProfPh");
@@ -1148,37 +1200,44 @@ function applyI18n(){
 function render(){renderProgress();renderFilters();renderList();applyI18n();}
 
 function renderProgress(){
-  const tot=companies.length,sent=companies.filter(c=>c.status!=="not_sent").length;
+  const active=companies.filter(c=>!c.archived);
+  const tot=active.length,sent=active.filter(c=>c.status!=="not_sent").length;
   si("sentN",sent);si("sentLbl",t("sentOf",{t:tot}));si("pctLbl",tot?Math.round(sent/tot*100)+"%":"0%");
   const tr=document.getElementById("progTrack");tr.innerHTML="";
-  STATUSES.forEach((s,i)=>{const n=companies.filter(c=>c.status===s).length;if(!n)return;const seg=document.createElement("div");seg.className="prog-seg";seg.style.width=(n/tot*100)+"%";seg.style.background=SCOLS[i];tr.appendChild(seg);});
+  STATUSES.forEach((s,i)=>{const n=active.filter(c=>c.status===s).length;if(!n)return;const seg=document.createElement("div");seg.className="prog-seg";seg.style.width=(n/tot*100)+"%";seg.style.background=SCOLS[i];tr.appendChild(seg);});
+  document.getElementById("progTrack").parentElement.hidden=viewArchive;
 }
 
 function renderFilters(){
+  const filterRow=document.getElementById("filterRow"),prioRow=document.getElementById("prioRow"),sortRow=document.getElementById("sortRow");
+  if(viewArchive){filterRow.innerHTML="";prioRow.innerHTML="";sortRow.innerHTML="";return;}
+  const active=companies.filter(c=>!c.archived);
   const sl=I18N[lang].st;
-  let h=`<button class="chip${activeFilter==="all"?" active":""}" data-f="all">${t("all")} (${companies.length})</button>`;
-  STATUSES.forEach((s,i)=>{const n=companies.filter(c=>c.status===s).length;h+=`<button class="chip${activeFilter===s?" active":""}" data-f="${s}">${sl[i]} (${n})</button>`;});
-  document.getElementById("filterRow").innerHTML=h;
+  let h=`<button class="chip${activeFilter==="all"?" active":""}" data-f="all">${t("all")} (${active.length})</button>`;
+  STATUSES.forEach((s,i)=>{const n=active.filter(c=>c.status===s).length;h+=`<button class="chip${activeFilter===s?" active":""}" data-f="${s}">${sl[i]} (${n})</button>`;});
+  filterRow.innerHTML=h;
 
   // Priority row
-  const PA=[{v:"A",l:`⭐ A (${companies.filter(c=>c.priority==="A").length})`,c:"pA"},{v:"B",l:`🔵 B (${companies.filter(c=>c.priority==="B").length})`,c:"pB"},{v:"C",l:`⚪ C (${companies.filter(c=>c.priority==="C").length})`,c:"pC"},{v:"none",l:`— (${companies.filter(c=>!c.priority).length})`,c:"pN"},{v:"nopos",l:`🚫 ${t("nPosS")} (${companies.filter(c=>c.noPosition).length})`,c:"pX"}];
+  const PA=[{v:"A",l:`⭐ A (${active.filter(c=>c.priority==="A").length})`,c:"pA"},{v:"B",l:`🔵 B (${active.filter(c=>c.priority==="B").length})`,c:"pB"},{v:"C",l:`⚪ C (${active.filter(c=>c.priority==="C").length})`,c:"pC"},{v:"none",l:`— (${active.filter(c=>!c.priority).length})`,c:"pN"},{v:"nopos",l:`🚫 ${t("nPosS")} (${active.filter(c=>c.noPosition).length})`,c:"pX"}];
   let ph=`<span style="font-size:11px;color:var(--faint);padding:5px 4px 5px 0;flex-shrink:0;">${t("fPrio")}</span>`;
   PA.forEach(p=>ph+=`<button class="chip ${p.c}${activePrios.has(p.v)?" active":""}" data-pf="${p.v}">${p.l}</button>`);
-  document.getElementById("prioRow").innerHTML=ph;
+  prioRow.innerHTML=ph;
 
   // Sort row
   const SORTS=[{v:"prio",l:t("sortPrio")},{v:"sent",l:t("sortSent")},{v:"name",l:t("sortName")}];
   let sh=`<span style="font-size:11px;color:var(--faint);flex-shrink:0;">${t("sortLabel")}</span>`;
   SORTS.forEach(s=>sh+=`<button class="sort-chip${sortMode===s.v?" active":""}" data-sort="${s.v}">${s.l}</button>`);
-  document.getElementById("sortRow").innerHTML=sh;
+  sortRow.innerHTML=sh;
 }
 
 const PO={"A":0,"B":1,"C":2,"":3};
 function getFiltered(){
   return companies.filter(c=>{
-    if(activeFilter!=="all"&&c.status!==activeFilter)return false;
+    if(viewArchive){ if(!c.archived)return false; }
+    else{ if(c.archived)return false; }
+    if(!viewArchive&&activeFilter!=="all"&&c.status!==activeFilter)return false;
     if(searchTerm&&!c.name.toLowerCase().includes(searchTerm.toLowerCase()))return false;
-    if(activePrios.size>0){
+    if(!viewArchive&&activePrios.size>0){
       const ok=(activePrios.has("A")&&c.priority==="A")||(activePrios.has("B")&&c.priority==="B")||(activePrios.has("C")&&c.priority==="C")||(activePrios.has("none")&&!c.priority)||(activePrios.has("nopos")&&c.noPosition);
       if(!ok)return false;
     }
@@ -1193,7 +1252,13 @@ function getFiltered(){
 function renderList(){
   const list=document.getElementById("cardList"),empty=document.getElementById("emptyState");
   const f=getFiltered();
-  if(!companies.length){list.innerHTML="";empty.hidden=false;empty.textContent=t("eList");return;}
+  if(viewArchive){
+    if(!f.length){list.innerHTML="";empty.hidden=false;empty.textContent=t("archiveEmpty");return;}
+    empty.hidden=true;list.innerHTML=f.map(cardHtml).join("");
+    return;
+  }
+  const activeCount=companies.filter(c=>!c.archived).length;
+  if(!activeCount){list.innerHTML="";empty.hidden=false;empty.textContent=t("eList");return;}
   if(!f.length){list.innerHTML="";empty.hidden=false;empty.textContent=t("eFilter");return;}
   empty.hidden=true;list.innerHTML=f.map(cardHtml).join("");
 }
@@ -1228,8 +1293,12 @@ function cardHtml(c){
       ${clBadge}
     </div>
   </div>
-  <select class="ssel" data-action="status">${opts}</select>
+  <select class="ssel" data-action="status"${c.archived?" disabled":""}>${opts}</select>
   <button class="ibtn" data-action="toggle">${isOpen?t("col"):t("det")}</button>
+  ${c.archived
+    ?`<button class="ibtn" data-action="unarchive" style="color:var(--s4);border-color:var(--s4);">${t("unarchiveBtn")}</button>`
+    :`<button class="ibtn" data-action="archive" title="${t("archiveBtn")}">📦</button>`
+  }
   <button class="ibtn del" data-action="del">${t("del")}</button>
 </div>
 ${isOpen?`<div class="detail">
@@ -1285,12 +1354,15 @@ function ensureChecklist(c){
 }
 function addC(d){companies.unshift({id:uid(),name:d.name,status:"not_sent",sentDate:"",
   profession:d.profession||"",priority:d.priority||"",noPosition:false,
+  archived:false,updatedAt:Date.now(),
   checklist:defaultChecklist(),
   openDate:"",deadline:"",datesFromAi:false,datesConfirmed:false,
   website:d.website||"",phone:d.phone||"",contactName:d.contactName||"",
   contactRole:d.contactRole||"",email:d.email||"",address:d.address||"",notes:d.notes||""});saveC();render();}
 function delC(id){if(!confirm(t("delQ")))return;companies=companies.filter(c=>c.id!==id);if(expandedId===id)expandedId=null;saveC();render();}
-function setSt(id,status){const c=companies.find(c=>c.id===id);if(!c)return;c.status=status;if(status!=="not_sent"&&!c.sentDate)c.sentDate=today();saveC();render();}
+function setSt(id,status){const c=companies.find(c=>c.id===id);if(!c)return;c.status=status;c.updatedAt=Date.now();if(status!=="not_sent"&&!c.sentDate)c.sentDate=today();saveC();render();}
+function archiveC(id){const c=companies.find(c=>c.id===id);if(!c)return;c.archived=true;c.updatedAt=Date.now();if(expandedId===id)expandedId=null;saveC();render();}
+function unarchiveC(id){const c=companies.find(c=>c.id===id);if(!c)return;c.archived=false;c.updatedAt=Date.now();saveC();render();}
 function saveDet(id,card){
   const c=companies.find(c=>c.id===id);if(!c)return;
   const oldOpen=c.openDate,oldDl=c.deadline;
@@ -1302,6 +1374,7 @@ function saveDet(id,card){
   if((c.openDate!==oldOpen||c.deadline!==oldDl)&&c.datesFromAi){
     c.datesConfirmed=true;
   }
+  c.updatedAt=Date.now();
   saveC();render();
 }
 
@@ -1427,19 +1500,21 @@ function wireEvents(){
     const id=card.dataset.id,action=e.target.closest("[data-action]")?.dataset.action;if(!action)return;
     if(action==="toggle"){expandedId=expandedId===id?null:id;render();}
     else if(action==="del")delC(id);
+    else if(action==="archive"){if(confirm(t("archiveConfirm")))archiveC(id);}
+    else if(action==="unarchive")unarchiveC(id);
     else if(action==="cl-toggle"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       ensureChecklist(c);
       const itemId=e.target.closest("[data-cl-id]").dataset.clId;
       const item=c.checklist.find(x=>x.id===itemId);
-      if(item){item.done=e.target.checked;saveC();render();}
+      if(item){item.done=e.target.checked;c.updatedAt=Date.now();saveC();render();}
     }
     else if(action==="cl-del"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       ensureChecklist(c);
       const itemId=e.target.closest("[data-cl-id]").dataset.clId;
       c.checklist=c.checklist.filter(x=>x.id!==itemId);
-      saveC();render();
+      c.updatedAt=Date.now();saveC();render();
     }
     else if(action==="cl-add"){
       const c=companies.find(c=>c.id===id);if(!c)return;
@@ -1449,7 +1524,7 @@ function wireEvents(){
       const label=(inp?.value||"").trim();
       if(!label)return;
       c.checklist.push({id:"u"+Date.now().toString(36),label,done:false});
-      saveC();render();
+      c.updatedAt=Date.now();saveC();render();
     }
     else if(action==="ai"){
       const c=companies.find(c=>c.id===id);if(!c)return;
@@ -1531,6 +1606,11 @@ function wireEvents(){
     renderDiscResults();
   });
   document.getElementById("btnPdf").addEventListener("click",()=>generatePDF());
+  document.getElementById("btnArchive").addEventListener("click",()=>{
+    viewArchive=!viewArchive;expandedId=null;
+    document.getElementById("btnAdd").hidden=viewArchive;
+    render();
+  });
   document.getElementById("btnExport").addEventListener("click",()=>{const blob=new Blob([JSON.stringify(companies,null,2)],{type:"application/json"});const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(blob),download:t("expFile")});a.click();URL.revokeObjectURL(a.href);});
   document.getElementById("btnImport").addEventListener("click",()=>document.getElementById("importFile").click());
   document.getElementById("importFile").addEventListener("change",e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const arr=JSON.parse(r.result);if(!Array.isArray(arr))throw new Error("invalid");if(confirm(t("impQ",{n:arr.length}))){companies=[...companies,...arr];saveC();render();}}catch(err){alert(t("impE",{m:err.message}));}};r.readAsText(f);e.target.value="";});
@@ -1750,6 +1830,18 @@ Search the web for real companies in ${loc}.`
   };
 }
 
+// Validates that a result's address plausibly matches the requested location.
+// Loose word-overlap check — not exact geocoding, but catches obvious mismatches
+// (e.g. asking for "Zürich" and getting a company address in "Wien").
+function locationMatches(address, loc){
+  if(!loc||!loc.trim())return true; // no location constraint given
+  if(!address||!address.trim())return false; // no address to verify against — reject
+  const locWords=loc.toLowerCase().split(/[\s,]+/).filter(w=>w.length>2);
+  const addrLower=address.toLowerCase();
+  if(!locWords.length)return true;
+  return locWords.some(w=>addrLower.includes(w));
+}
+
 async function callGroqDisc(prof,loc,page){
   const exclude=companies.map(c=>c.name);
   const{sys,usr}=buildDiscPrompt(prof,loc,exclude,page);
@@ -1766,9 +1858,9 @@ async function callGroqDisc(prof,loc,page){
   if(!m)throw new Error("bad json");
   const arr=JSON.parse(m[0]);
   if(!Array.isArray(arr))throw new Error("not array");
-  // Filter out already in list
+  // Filter out already in list AND results whose address doesn't match the requested location
   const existing=new Set(companies.map(c=>c.name.toLowerCase().trim()));
-  return arr.filter(r=>r.name&&!existing.has(r.name.toLowerCase().trim()));
+  return arr.filter(r=>r.name&&!existing.has(r.name.toLowerCase().trim())&&locationMatches(r.address,loc));
 }
 
 function discErrMsg(e){
