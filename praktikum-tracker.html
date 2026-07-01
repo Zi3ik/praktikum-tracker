@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Praktikum">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com https://api.github.com https://gist.githubusercontent.com; manifest-src 'self' blob:; base-uri 'self'; form-action 'none'; object-src 'none';">
 <title>Praktikum Tracker</title>
 <style>
 :root{
@@ -640,11 +641,11 @@ de:{
     s0:"Sprache",s1:"GitHub",s2:"API-Key",s3:"Fertig",
     t0:"Sprache wählen",
     t1:"GitHub verbinden",
-    i1:["<b>Schritt 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank'>GitHub Token erstellen</a> (nur «gist» Scope)","<b>Schritt 2:</b> Token kopieren und unten einfügen","<b>Schritt 3:</b> App speichert deinen API-Schlüssel im Token — auf dem Handy einfach denselben Token eingeben"],
+    i1:["<b>Schritt 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>GitHub Token erstellen</a> (nur «gist» Scope)","<b>Schritt 2:</b> Token kopieren und unten einfügen","<b>Schritt 3:</b> App speichert deinen API-Schlüssel im Token — auf dem Handy einfach denselben Token eingeben"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Überspringen — nur auf einem Gerät",
     t2:"Groq API-Schlüssel",
-    i2:["<b>Schritt 1:</b> <a href='https://console.groq.com/keys' target='_blank'>console.groq.com/keys</a> öffnen (kostenlos)","<b>Schritt 2:</b> Konto erstellen → «Create API Key» → kopieren","<b>Schritt 3:</b> Hier einfügen"],
+    i2:["<b>Schritt 1:</b> <a href='https://console.groq.com/keys' target='_blank' rel='noopener noreferrer'>console.groq.com/keys</a> öffnen (kostenlos)","<b>Schritt 2:</b> Konto erstellen → «Create API Key» → kopieren","<b>Schritt 3:</b> Hier einfügen"],
     p2:"gsk_...",l2:"API-Schlüssel",
     t3:"Alles bereit!",
     d3:"Firmen hinzufügen und KI Kontaktdaten suchen lassen.",
@@ -728,11 +729,11 @@ ru:{
     s0:"Язык",s1:"GitHub",s2:"API-ключ",s3:"Готово",
     t0:"Выбор языка",
     t1:"Подключить GitHub",
-    i1:["<b>Шаг 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank'>Создай GitHub-токен</a> (только scope «gist»)","<b>Шаг 2:</b> Скопируй токен и вставь ниже","<b>Шаг 3:</b> Приложение сохранит твой API-ключ в токене — на телефоне введи тот же токен и всё восстановится"],
+    i1:["<b>Шаг 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Создай GitHub-токен</a> (только scope «gist»)","<b>Шаг 2:</b> Скопируй токен и вставь ниже","<b>Шаг 3:</b> Приложение сохранит твой API-ключ в токене — на телефоне введи тот же токен и всё восстановится"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Пропустить — использую только на одном устройстве",
     t2:"Groq API-ключ",
-    i2:["<b>Шаг 1:</b> Открой <a href='https://console.groq.com/keys' target='_blank'>console.groq.com/keys</a> (бесплатно)","<b>Шаг 2:</b> Создай аккаунт → «Create API Key» → скопируй","<b>Шаг 3:</b> Вставь сюда"],
+    i2:["<b>Шаг 1:</b> Открой <a href='https://console.groq.com/keys' target='_blank' rel='noopener noreferrer'>console.groq.com/keys</a> (бесплатно)","<b>Шаг 2:</b> Создай аккаунт → «Create API Key» → скопируй","<b>Шаг 3:</b> Вставь сюда"],
     p2:"gsk_...",l2:"API-ключ",
     t3:"Всё готово!",
     d3:"Добавляй компании и нажимай «Найти через ИИ» — приложение само подберёт контакты.",
@@ -816,11 +817,11 @@ en:{
     s0:"Language",s1:"GitHub",s2:"API Key",s3:"Ready",
     t0:"Choose language",
     t1:"Connect GitHub",
-    i1:["<b>Step 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank'>Create GitHub token</a> (only «gist» scope needed)","<b>Step 2:</b> Copy the token and paste it below","<b>Step 3:</b> The app saves your API key in the token — on your phone enter the same token to restore everything"],
+    i1:["<b>Step 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Create GitHub token</a> (only «gist» scope needed)","<b>Step 2:</b> Copy the token and paste it below","<b>Step 3:</b> The app saves your API key in the token — on your phone enter the same token to restore everything"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Skip — I only use this on one device",
     t2:"Groq API Key",
-    i2:["<b>Step 1:</b> Open <a href='https://console.groq.com/keys' target='_blank'>console.groq.com/keys</a> (free)","<b>Step 2:</b> Create account → «Create API Key» → copy","<b>Step 3:</b> Paste below"],
+    i2:["<b>Step 1:</b> Open <a href='https://console.groq.com/keys' target='_blank' rel='noopener noreferrer'>console.groq.com/keys</a> (free)","<b>Step 2:</b> Create account → «Create API Key» → copy","<b>Step 3:</b> Paste below"],
     p2:"gsk_...",l2:"API Key",
     t3:"All set!",
     d3:"Add companies and click «Find data with AI» — the app looks up contacts automatically.",
@@ -1406,7 +1407,7 @@ async function renderOb(){
     const i1=(I18N[obLang]||I18N.de).ob.i1||[];
     body.innerHTML=`<h2>${ob("t1")} <span class="ob-opt-badge">optional</span></h2>
     <div class="ob-instr"><ol>${i1.map(s=>`<li>${s}</li>`).join("")}</ol></div>
-    <div class="ob-field"><input type="text" id="obPat" placeholder="${ob("p1")}" autocomplete="off"></div>
+    <div class="ob-field"><input type="password" id="obPat" placeholder="${ob("p1")}" autocomplete="off"><button type="button" class="btn-back" id="obPatToggle" style="flex:none;padding:9px 12px;">👁</button></div>
     <div class="ob-err" id="obPatErr"></div>
     <div class="ob-info" id="obPatInfo"></div>
     <p class="ob-skip" id="obSkip">${ob("skip1")}</p>
@@ -1416,6 +1417,12 @@ async function renderOb(){
     </div>`;
     document.getElementById("obBack").addEventListener("click",()=>{obStep=0;renderOb();});
     document.getElementById("obSkip").addEventListener("click",()=>{obStep=2;renderOb();});
+    document.getElementById("obPatToggle").addEventListener("click",()=>{
+      const inp=document.getElementById("obPat");
+      const isHidden=inp.type==="password";
+      inp.type=isHidden?"text":"password";
+      document.getElementById("obPatToggle").textContent=isHidden?"🙈":"👁";
+    });
     document.getElementById("obNext").addEventListener("click",async()=>{
       const v=document.getElementById("obPat").value.trim();
       if(!v){obStep=2;renderOb();return;}
@@ -1437,7 +1444,7 @@ async function renderOb(){
     const autoLoaded=groqKey&&ghPat;
     body.innerHTML=`<h2>${ob("t2")}</h2>
     ${autoLoaded?`<div class="ob-success"><b>${ob("autoLoaded")}</b>${groqKey.slice(0,8)}…</div>`:`<div class="ob-instr"><ol>${i2.map(s=>`<li>${s}</li>`).join("")}</ol></div>`}
-    ${!autoLoaded?`<div class="ob-field"><input type="text" id="obKey" placeholder="${ob("p2")}" autocomplete="off"></div><div class="ob-err" id="obKeyErr"></div>`:""}
+    ${!autoLoaded?`<div class="ob-field"><input type="password" id="obKey" placeholder="${ob("p2")}" autocomplete="off"><button type="button" class="btn-back" id="obKeyToggle" style="flex:none;padding:9px 12px;">👁</button></div><div class="ob-err" id="obKeyErr"></div>`:""}
     <div class="ob-footer">
       <button class="btn-back" id="obBack">${ob("back")}</button>
       <button class="btn-next" id="obNext">${ob("next")}</button>
@@ -1446,6 +1453,11 @@ async function renderOb(){
     if(!autoLoaded){
       const inp=document.getElementById("obKey"),nxt=document.getElementById("obNext");
       nxt.disabled=true;
+      document.getElementById("obKeyToggle").addEventListener("click",()=>{
+        const isHidden=inp.type==="password";
+        inp.type=isHidden?"text":"password";
+        document.getElementById("obKeyToggle").textContent=isHidden?"🙈":"👁";
+      });
       inp.addEventListener("input",()=>{nxt.disabled=inp.value.trim().length<10;document.getElementById("obKeyErr").textContent="";});
       nxt.addEventListener("click",()=>{
         const v=inp.value.trim();if(v.length<10){document.getElementById("obKeyErr").textContent="Invalid";return;}
