@@ -529,6 +529,17 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
       </div>
     </div>
 
+    <p class="set-sec" id="setSecBlueprint"></p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;">
+      <p style="font-size:11px;color:var(--dim);margin:0;flex:1;" id="bpDescEl"></p>
+      <button class="btn-ghost" id="bpResetBtn" style="font-size:11px;flex-shrink:0;"></button>
+    </div>
+    <div id="bpList" style="margin-bottom:8px;"></div>
+    <div class="cl-add-row" style="margin-bottom:16px;">
+      <input type="text" class="cl-add-inp" id="bpInp">
+      <button class="btn-cl-add" id="bpAddBtn"></button>
+    </div>
+
     <p class="set-sec" id="setSecSync"></p>
 
     <!-- Sync now -->
@@ -606,6 +617,12 @@ de:{
   clTitle:"📋 Dokumente & Aufgaben",clAdd:"Hinzufügen",clPh:"Eigene Aufgabe…",
   clDone:"{{n}} von {{t}} erledigt",
   clDefaults:["CV / Lebenslauf","Motivationsschreiben","Zeugnis (letztes)","Anruf gemacht","E-Mail gesendet"],
+  secBlueprint:"📋 Aufgaben-Vorlage",
+  bpDesc:"Diese Punkte werden automatisch zu jeder neuen Firma hinzugefügt. Für bestehende Firmen kannst du sie über «Vorlage anwenden» im Aufgaben-Bereich nachträglich ergänzen.",
+  bpPh:"z.B. Lebenslauf, Bewerbung, Zeugnis…",
+  bpApply:"↻ Vorlage anwenden",
+  bpReset:"Zurücksetzen",bpResetConfirm:"Vorlage auf Standardwerte zurücksetzen?",
+  bpEmptyList:"Keine Vorlage-Punkte — füge welche hinzu.",
   fPrio:"Priorität:",
   openDate:"Bewerbung ab",deadline:"Frist bis",datesAi:"KI-Schätzung — bitte prüfen",
   datesConfirm:"Bestätigen",datesFind:"📅 Fristen suchen",datesFinding:"Suche Fristen…",
@@ -694,6 +711,12 @@ ru:{
   clTitle:"📋 Документы и задачи",clAdd:"Добавить",clPh:"Своя задача…",
   clDone:"{{n}} из {{t}} выполнено",
   clDefaults:["CV / Lebenslauf","Motivationsschreiben","Zeugnis (последний)","Позвонил","Письмо отправлено"],
+  secBlueprint:"📋 Шаблон задач",
+  bpDesc:"Эти пункты автоматически добавляются к каждой новой компании. Для уже существующих можно добавить их через «Применить шаблон» в блоке задач.",
+  bpPh:"напр. Резюме, Заявка, Zeugnis…",
+  bpApply:"↻ Применить шаблон",
+  bpReset:"Сбросить",bpResetConfirm:"Сбросить шаблон к значениям по умолчанию?",
+  bpEmptyList:"Пунктов шаблона нет — добавь свои.",
   fPrio:"Приоритет:",
   openDate:"Приём с",deadline:"Дедлайн до",datesAi:"Оценка ИИ — проверь на сайте",
   datesConfirm:"Подтвердить",datesFind:"📅 Найти сроки",datesFinding:"Ищу сроки…",
@@ -782,6 +805,12 @@ en:{
   clTitle:"📋 Documents & Tasks",clAdd:"Add",clPh:"Custom task…",
   clDone:"{{n}} of {{t}} done",
   clDefaults:["CV / Lebenslauf","Motivationsschreiben","Zeugnis (latest)","Called them","Email sent"],
+  secBlueprint:"📋 Task Blueprint",
+  bpDesc:"These items are added automatically to every new company. For existing companies, use «Apply blueprint» in the tasks section to add them retroactively.",
+  bpPh:"e.g. CV, Cover letter, Reference…",
+  bpApply:"↻ Apply blueprint",
+  bpReset:"Reset",bpResetConfirm:"Reset blueprint to default values?",
+  bpEmptyList:"No blueprint items yet — add some below.",
   fPrio:"Priority:",
   openDate:"Opens",deadline:"Deadline",datesAi:"AI estimate — verify on company site",
   datesConfirm:"Confirm",datesFind:"📅 Find dates",datesFinding:"Looking up dates…",
@@ -833,6 +862,7 @@ en:{
 // ── State ────────────────────────────────────────────────
 const SK="prak_v3",SK_LANG="prak_lang",SK_GROQ="prak_groq",SK_RL="prak_rl";
 const SK_PAT="prak_gh_pat",SK_GIST="prak_gist_id",SK_STS="prak_sync_ts";
+const SK_BP="prak_blueprint",SK_BP_TS="prak_blueprint_ts";
 const HDB="prak_fs3",HST="handles",HK="autosave";
 const GF="praktikum-tracker-data.json";
 const STATUSES=["not_sent","sent","response","interview","accepted","rejected"];
@@ -840,6 +870,7 @@ const SCOLS=["var(--s0)","var(--s1)","var(--s2)","var(--s3)","var(--s4)","var(--
 const MODELS=[{id:"compound-beta-mini",s:true},{id:"llama-3.3-70b-versatile",s:false},{id:"llama-3.1-8b-instant",s:false}];
 
 let companies=[],lang=localStorage.getItem(SK_LANG)||"de";
+let blueprint=[];
 let groqKey=localStorage.getItem(SK_GROQ)||"";
 let ghPat=localStorage.getItem(SK_PAT)||"";
 let gistId=localStorage.getItem(SK_GIST)||"";
@@ -884,6 +915,23 @@ function loadC(){
 function saveC(){localStorage.setItem(SK,JSON.stringify(companies));writeToFile();pushGist();}
 function uid(){return"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 
+function loadBlueprint(){
+  try{
+    const raw=localStorage.getItem(SK_BP);
+    if(raw){blueprint=JSON.parse(raw);if(Array.isArray(blueprint))return;}
+  }catch(e){}
+  // First run: seed with the built-in defaults for the current language
+  blueprint=(I18N[lang].clDefaults||I18N.de.clDefaults).slice();
+  localStorage.setItem(SK_BP,JSON.stringify(blueprint));
+  localStorage.setItem(SK_BP_TS,String(Date.now()));
+}
+function saveBlueprint(){
+  localStorage.setItem(SK_BP,JSON.stringify(blueprint));
+  localStorage.setItem(SK_BP_TS,String(Date.now()));
+  pushGist();
+  renderBlueprintSettings();
+}
+
 // ── Rate limit ────────────────────────────────────────────
 function loadRl(){try{rlCache=JSON.parse(localStorage.getItem(SK_RL)||"{}");}catch(e){rlCache={};}}
 function pReset(v){if(!v)return 0;if(v.endsWith("ms"))return parseFloat(v);if(v.endsWith("s"))return parseFloat(v)*1000;return parseFloat(v)*1000;}
@@ -908,7 +956,9 @@ async function ghFetch(method,path,body){
 }
 
 // Gist payload always includes groqKey so the key syncs too
-function buildGistPayload(){return{updatedAt:Date.now(),groqKey,companies};}
+function buildGistPayload(){
+  return{updatedAt:Date.now(),groqKey,companies,blueprint,blueprintTs:parseInt(localStorage.getItem(SK_BP_TS)||"0")};
+}
 
 // Merges two company lists by id: for ids present in both, keeps whichever
 // has the newer updatedAt; ids present only on one side are kept as-is.
@@ -946,6 +996,16 @@ async function pullGist(){
     const p=JSON.parse(raw);
     // Always update groqKey from gist (keeps keys in sync across devices)
     if(p.groqKey&&p.groqKey!==groqKey){groqKey=p.groqKey;localStorage.setItem(SK_GROQ,groqKey);}
+    // Sync blueprint — newer timestamp wins
+    if(p.blueprint&&Array.isArray(p.blueprint)){
+      const localTs=parseInt(localStorage.getItem(SK_BP_TS)||"0");
+      const remoteTs=p.blueprintTs||0;
+      if(remoteTs>localTs){
+        blueprint=p.blueprint;
+        localStorage.setItem(SK_BP,JSON.stringify(blueprint));
+        localStorage.setItem(SK_BP_TS,String(remoteTs));
+      }
+    }
     const remoteCompanies=p.companies||[];
     const merged=mergeCompanies(companies,remoteCompanies);
     const changed=JSON.stringify(merged)!==JSON.stringify(companies);
@@ -1126,6 +1186,21 @@ function parseDate(v){
 }
 function si(id,v,html){const el=document.getElementById(id);if(el){if(html)el.innerHTML=v;else el.textContent=v;}}
 
+function renderBlueprintSettings(){
+  const list=document.getElementById("bpList");
+  if(!list)return;
+  si("setSecBlueprint",t("secBlueprint"));
+  si("bpDescEl",t("bpDesc"));
+  si("bpResetBtn",t("bpReset"));
+  si("bpAddBtn",t("clAdd"));
+  const inp=document.getElementById("bpInp");if(inp)inp.placeholder=t("bpPh");
+  list.innerHTML=blueprint.length?blueprint.map((label,i)=>`
+    <div class="cl-item">
+      <span class="cl-label" style="flex:1;">${esc(label)}</span>
+      <button class="cl-del" data-bp-del="${i}">✕</button>
+    </div>`).join(""):`<p style="font-size:12px;color:var(--faint);padding:4px 0;">${t("bpEmptyList")}</p>`;
+}
+
 function renderSettings(){
   const ghBtn=document.getElementById("setGhBtn"),ghDis=document.getElementById("setGhDis");
   const syncRow=document.getElementById("setSyncNowRow");
@@ -1188,13 +1263,13 @@ function applyI18n(){
   si("aiFillLbl",t("aiFill"));si("aiDisc",t("aiDisc"));si("addCancelBtn",t("cancel"));si("addSaveBtn",t("save"));
   si("lblAiLoc",t("aiLoc"));
   const fal=document.getElementById("fAiLoc");if(fal)fal.placeholder=t("aiLocPh");
-  si("setTitle",t("setTitle"));si("setSecAcc",t("secAcc"));si("setSecSync",t("secSync"));si("setSecStore",t("secStore"));
+  si("setTitle",t("setTitle"));si("setSecAcc",t("secAcc"));si("setSecSync",t("secSync"));si("setSecStore",t("secStore"));si("setSecBlueprint",t("secBlueprint"));
   si("setLblGh",t("lGh"));si("setLblGroq",t("lGroq"));
   si("setLblLang",t("lLang"));si("setLblAs",t("lAs"));si("setLblAsSub",t("lAsSub"));
   si("setLblSyncNow",t("lSyncNow"));si("setLblSyncNowSub",t("lSyncNowSub"));
   si("setSyncNowBtn",t("btnSyncNow"));si("setCloseBtn",t("btnClose"));
   si("setLblShare",{"de":"📲 Download-Seite","ru":"📲 Страница скачивания","en":"📲 Download Page"}[lang]||"📲 Download Page");
-  renderSettings();renderAs();renderSyncBar();renderRl();
+  renderSettings();renderBlueprintSettings();renderAs();renderSyncBar();renderRl();
 }
 
 // ── Render ────────────────────────────────────────────────
@@ -1309,7 +1384,10 @@ ${isOpen?`<div class="detail">
   <div class="cl-wrap">
     <div class="cl-header">
       <span class="cl-title">${t("clTitle")}</span>
-      <span class="cl-progress${clDone===clTotal&&clTotal>0?" all-done":""}">${t("clDone",{n:clDone,t:clTotal})}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="ibtn" data-action="cl-apply-bp" style="font-size:10px;padding:3px 7px;">${t("bpApply")}</button>
+        <span class="cl-progress${clDone===clTotal&&clTotal>0?" all-done":""}">${t("clDone",{n:clDone,t:clTotal})}</span>
+      </div>
     </div>
     <div class="cl-prog-bar"><div class="cl-prog-fill" style="width:${clTotal?Math.round(clDone/clTotal*100):0}%"></div></div>
     ${c.checklist.map(item=>`
@@ -1348,7 +1426,8 @@ ${isOpen?`<div class="detail">
 
 // ── Mutations ─────────────────────────────────────────────
 function defaultChecklist(){
-  return(I18N[lang].clDefaults||I18N.de.clDefaults).map((label,i)=>({id:"def"+i,label,done:false}));
+  const src=(blueprint&&blueprint.length)?blueprint:(I18N[lang].clDefaults||I18N.de.clDefaults);
+  return src.map((label,i)=>({id:"bp"+i+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,4),label,done:false}));
 }
 function ensureChecklist(c){
   if(!c.checklist)c.checklist=[];
@@ -1538,6 +1617,19 @@ function wireEvents(){
       c.checklist.push({id:"u"+Date.now().toString(36),label,done:false});
       c.updatedAt=Date.now();saveC();render();
     }
+    else if(action==="cl-apply-bp"){
+      const c=companies.find(c=>c.id===id);if(!c)return;
+      ensureChecklist(c);
+      const existing=new Set(c.checklist.map(x=>x.label.toLowerCase().trim()));
+      let added=false;
+      blueprint.forEach((label,i)=>{
+        if(!existing.has(label.toLowerCase().trim())){
+          c.checklist.push({id:"bp"+i+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,4),label,done:false});
+          added=true;
+        }
+      });
+      if(added){c.updatedAt=Date.now();saveC();render();}
+    }
     else if(action==="ai"){
       const c=companies.find(c=>c.id===id);if(!c)return;
       const pr=card.querySelector("[data-f='profession']")?.value||c.profession||"";
@@ -1650,6 +1742,26 @@ function wireEvents(){
     if(k&&k.trim().length>5){groqKey=k.trim();localStorage.setItem(SK_GROQ,groqKey);if(ghPat&&gistId)pushGist();}
   });
   document.getElementById("setSyncNowBtn").addEventListener("click",()=>pullGist());
+
+  // Blueprint (task template) settings
+  document.getElementById("bpAddBtn").addEventListener("click",()=>{
+    const inp=document.getElementById("bpInp");
+    const label=inp.value.trim();if(!label)return;
+    blueprint.push(label);inp.value="";saveBlueprint();
+  });
+  document.getElementById("bpInp").addEventListener("keydown",e=>{
+    if(e.key==="Enter")document.getElementById("bpAddBtn").click();
+  });
+  document.getElementById("bpList").addEventListener("click",e=>{
+    const b=e.target.closest("[data-bp-del]");if(!b)return;
+    const idx=parseInt(b.dataset.bpDel);
+    blueprint.splice(idx,1);saveBlueprint();
+  });
+  document.getElementById("bpResetBtn").addEventListener("click",()=>{
+    if(!confirm(t("bpResetConfirm")))return;
+    blueprint=(I18N[lang].clDefaults||I18N.de.clDefaults).slice();
+    saveBlueprint();
+  });
 
   // Token QR modal
   let tokenTimer=null;
@@ -2109,7 +2221,7 @@ function initPWA(){
 
 // ── Init ─────────────────────────────────────────────────
 function initApp(){
-  loadC();loadRl();render();initAs();
+  loadC();loadRl();loadBlueprint();render();initAs();
   if(ghPat&&gistId){setSyncState("ok");renderSyncBar();pullGist();}
   else if(ghPat&&!gistId){connectGist(ghPat).catch(()=>{});}
   else{setSyncState("none");renderSyncBar();}
