@@ -2058,6 +2058,10 @@ async function callGroqDisc(prof,loc,page){
 
 function discErrMsg(e){
   if(e.status===401||e.status===403)return t("discErrKey");
+  if(e.status===429||e.message?.includes("429")||e.message?.includes("Rate limit")||e.message?.includes("rate_limit")){
+    const reset=utcStr(rlCache.resetAt);
+    return t("aiE429",{r:reset})+" "+{"de":"«Ещё» wird nach dem Reset wieder funktionieren.","ru":"Кнопка «Ещё» снова заработает после сброса.","en":"The «More» button will work again after reset."}[lang];
+  }
   if(e.message?.includes("Failed to fetch")||e.message?.includes("NetworkError"))return t("discErrNet");
   return t("discErrGen",{m:(e.message||"").slice(0,60)});
 }
@@ -2120,6 +2124,10 @@ async function runDiscovery(loadMore=false){
     }
   }catch(e){
     statusEl.className="disc-status err";statusEl.textContent=discErrMsg(e);
+    // Keep the "More" button if we already loaded some results — user can retry later
+    if(discAllResults.length>0){
+      moreBtn.hidden=false;moreBtn.textContent=t("discMore");
+    }
   }finally{
     btn.disabled=false;if(moreBtn)moreBtn.disabled=false;
   }
