@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Unit tests ─────────────────────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run tests
+        run: node tests/core.test.js
+
+  # ── 2. HTML / JS syntax validation ───────────────────────
+  validate:
+    name: Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Extract and check JS syntax
+        run: |
+          node -e "
+          const fs = require('fs');
+          const html = fs.readFileSync('praktikum-tracker.html', 'utf8');
+          const m = html.match(/<script>([\s\S]*?)<\/script>/);
+          if (!m) { console.error('No script tag found'); process.exit(1); }
+          fs.writeFileSync('/tmp/app.js', m[1]);
+          console.log('JS extracted: ' + m[1].split('\n').length + ' lines');
+          "
+          node --check /tmp/app.js && echo "✅ JS syntax OK"
+
+  # ── 3. Security checks ────────────────────────────────────
+  security:
+    name: Security Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Security audit
+        run: |
+          node -e "
+          const fs = require('fs');
+          const html = fs.readFileSync('praktikum-tracker.html', 'utf8');
+          const m = html.match(/<script>([\s\S]*?)<\/script>/);
+          const js = m ? m[1] : '';
+          const issues = [];
+
+          // No eval
+          if (js.includes('eval(')) issues.push('eval() found');
+          if (js.includes('new Function(')) issues.push('new Function() found');
+          if (js.includes('document.write(')) issues.push('document.write() found');
+
+          // CSP present
+          if (!html.includes('Content-Security-Policy')) issues.push('CSP missing');
+          if (!html.includes('frame-ancestors')) issues.push('frame-ancestors missing from CSP');
+
+          // No hardcoded secrets (gsk_ = Groq key, ghp_ = GitHub PAT)
+          if (/gsk_[A-Za-z0-9]{20}/.test(html)) issues.push('Possible hardcoded Groq API key');
+          if (/ghp_[A-Za-z0-9]{20}/.test(html)) issues.push('Possible hardcoded GitHub PAT');
+          if (/github_pat_[A-Za-z0-9]/.test(html)) issues.push('Possible hardcoded GitHub PAT (fine-grained)');
+
+          // noopener on external links
+          const blankNoRel = [...html.matchAll(/target=[\"']_blank[\"'](?![^>]*noopener)/g)];
+          if (blankNoRel.length) issues.push(blankNoRel.length + ' _blank link(s) missing noopener');
+
+          // Password type for token inputs
+          const pwdCount = (html.match(/type=\"password\"/g) || []).length;
+          if (pwdCount < 2) issues.push('Token inputs should use type=password (found ' + pwdCount + ')');
+
+          // SRI on dynamically loaded QRCode
+          if (!js.includes('s.integrity')) issues.push('Dynamic script missing integrity check');
+
+          // Sync mutex
+          if (!js.includes('_syncLock')) issues.push('No sync mutex found (_syncLock)');
+
+          // Fetch timeouts
+          if (!js.includes('AbortController')) issues.push('No fetch timeouts (AbortController)');
+
+          if (issues.length) {
+            console.error('❌ Security issues found:');
+            issues.forEach(i => console.error('   • ' + i));
+            process.exit(1);
+          }
+          console.log('✅ Security checks passed (' + issues.length + ' issues)');
+          "
+
+  # ── 4. Link check (download.html) ────────────────────────
+  links:
+    name: HTML Structure Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check required files exist
+        run: |
+          node -e "
+          const fs = require('fs');
+          const required = [
+            'praktikum-tracker.html',
+            'download.html',
+            'index.html',
+            'README.md',
+            'ARCHITECTURE.md',
+            'LICENSE',
+            'tests/core.test.js',
+          ];
+          let ok = true;
+          required.forEach(f => {
+            if (fs.existsSync(f)) {
+              console.log('✅ ' + f);
+            } else {
+              console.error('❌ missing: ' + f);
+              ok = false;
+            }
+          });
+          if (!ok) process.exit(1);
+          "
+      - name: Check download.html references app correctly
+        run: |
+          node -e "
+          const html = require('fs').readFileSync('download.html', 'utf8');
+          if (!html.includes('praktikum-tracker.html')) {
+            console.error('❌ download.html does not reference praktikum-tracker.html');
+            process.exit(1);
+          }
+          if (!html.includes('QRCode')) {
+            console.error('❌ download.html missing QR code script');
+            process.exit(1);
+          }
+          console.log('✅ download.html structure OK');
+          "
