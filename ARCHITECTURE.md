@@ -87,10 +87,10 @@ mergeCompanies(local, remote) → per-record merge by updatedAt timestamp
 
 ### Sync (GitHub Gist)
 ```
-buildGistPayload()         → {updatedAt, geminiKey, companies, blueprint, blueprintTs}
+buildGistPayload()         → {updatedAt, companies, blueprint, blueprintTs}; never includes geminiKey
 pushGist()                 → PATCH gist with current payload (mutex-protected)
 pullGist()                 → GET gist, merge, push back if changed
-connectGist(pat)           → find or create gist, merge, return {geminiKey}
+connectGist(pat)           → find or create gist and merge company data
 mergeCompanies(local, rem) → union by id, newer updatedAt wins per record
 ```
 
@@ -130,7 +130,7 @@ writeToFile()    → createWritable → write JSON → close
 | Concern | Mitigation |
 |---------|------------|
 | XSS | All user data passes through `esc()` before innerHTML. `textContent` used where possible. |
-| Token exposure | `ghPat` and `geminiKey` stored in localStorage only. Masked as `type="password"` in UI. Never logged. |
+| Token exposure | `ghPat` and `geminiKey` are stored in localStorage only. The Gemini key is never written to a Gist or logged. Both are masked as `type="password"` in UI. |
 | CDN tampering | SRI `integrity` hash on QRCode script. jsPDF loaded on demand with SRI support. |
 | Clickjacking | CSP `frame-ancestors 'self'` |
 | Prototype pollution | JSON.parse results go into known typed variables, never `Object.assign({}, parsed)` spread |
@@ -176,7 +176,7 @@ Company {
 
 GistPayload {
   updatedAt: number
-  geminiKey: string   // synced so new devices get key automatically
+  // geminiKey is intentionally not part of the synced payload
   companies: Company[]
   blueprint: string[] // checklist template labels
   blueprintTs: number // timestamp of last blueprint change
@@ -205,12 +205,11 @@ No npm, no bundler, no build step.
 Step 0: Language selection (DE / RU / EN)
     ↓
 Step 1: GitHub PAT (optional)
-    ├── PAT entered → connectGist() → if geminiKey in Gist → skip Step 2
+    ├── PAT entered → connectGist() → company data is merged
     └── Skipped → go to Step 2
     ↓
 Step 2: Gemini API key
-    ├── Auto-loaded from Gist → show confirmation, skip input
-    └── Manual entry → save to localStorage + push to Gist
+    └── Manual entry → save to localStorage on this device only
     ↓
 Step 3: Done → initApp()
 ```

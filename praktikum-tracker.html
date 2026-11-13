@@ -726,12 +726,12 @@ de:{
     s0:"Sprache",s1:"GitHub",s2:"API-Key",s3:"Fertig",
     t0:"Sprache wählen",
     t1:"GitHub verbinden",
-    i1:["<b>Schritt 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>GitHub Token erstellen</a> (nur «gist» Scope)","<b>Schritt 2:</b> Token kopieren und unten einfügen","<b>Schritt 3:</b> App speichert deinen API-Schlüssel im Token — auf dem Handy einfach denselben Token eingeben"],
+    i1:["<b>Schritt 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>GitHub Token erstellen</a> (nur «gist» Scope)","<b>Schritt 2:</b> Token kopieren und unten einfügen","<b>Schritt 3:</b> Firmendaten werden synchronisiert; der Gemini-Schlüssel bleibt nur auf diesem Gerät"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Überspringen — nur auf einem Gerät",
     t2:"Gemini API-Schlüssel",
     i2:["<b>Schritt 1:</b> <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener noreferrer'>Google AI Studio öffnen</a>","<b>Schritt 2:</b> Gemini API-Schlüssel erstellen und kopieren","<b>Schritt 3:</b> Hier einfügen"],
-    p2:"AIza...",l2:"Gemini API-Schlüssel",
+    p2:"AQ... oder AIza...",l2:"Gemini API-Schlüssel",
     t3:"Alles bereit!",
     d3:"Firmen hinzufügen und KI Kontaktdaten suchen lassen.",
     autoLoaded:"API-Schlüssel wurde automatisch aus deinem GitHub-Account geladen ✓",
@@ -753,7 +753,7 @@ ru:{
   discProfPh:"Профессия / специальность",discLocPh:"Место — напр. Wien, Zürich, München, Bern",
   discSearch:"Искать",discMore:"Ещё",discAdd:"+ Добавить",discAdded:"✓ Добавлено",
   discLoading:"Ищу компании…",discAdding:"Добавляю и загружаю данные…",
-  discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",
+  discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",discErrAQ:"Google отклонил ключ формата AQ. Создай новый ключ в Google AI Studio или попробуй позже.",
   discErrNet:"Нет связи с Gemini.",discErrGen:"Ошибка: {{m}}",
   discErrAccess:"Gemini запретил доступ (403). Проверь ограничения API-ключа и проект Gemini.",
   discEmpty:"Новых компаний не найдено — попробуй другое место или профессию.",
@@ -771,7 +771,7 @@ ru:{
   aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, Zürich, München — пусто = везде",
   aiLoad:"Ищу…",aiOk:"Готово (веб-поиск).",aiOkN:"Готово (без поиска).",
   aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Gemini.",
-  aiEKey:"Неверный Gemini API-ключ (401).",aiEAccess:"Gemini запретил доступ (403). Проверь ограничения API-ключа и проект Gemini.",aiEGen:"Ошибка: {{m}}",
+  aiEKey:"Неверный Gemini API-ключ (401).",aiEAQ:"Google отклонил ключ формата AQ. Создай новый ключ в Google AI Studio или попробуй позже.",aiEAccess:"Gemini запретил доступ (403). Проверь ограничения API-ключа и проект Gemini.",aiEGen:"Ошибка: {{m}}",
   cancel:"Отмена",cancelQ:"Закрыть без сохранения?",
   saveC:"Сохранить изменения",delQ:"Удалить компанию?",
   eList:"Список пуст.",eFilter:"Ничего не найдено.",
@@ -825,12 +825,12 @@ ru:{
     s0:"Язык",s1:"GitHub",s2:"API-ключ",s3:"Готово",
     t0:"Выбор языка",
     t1:"Подключить GitHub",
-    i1:["<b>Шаг 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Создай GitHub-токен</a> (только scope «gist»)","<b>Шаг 2:</b> Скопируй токен и вставь ниже","<b>Шаг 3:</b> Приложение сохранит твой API-ключ в токене — на телефоне введи тот же токен и всё восстановится"],
+    i1:["<b>Шаг 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Создай GitHub-токен</a> (только scope «gist»)","<b>Шаг 2:</b> Скопируй токен и вставь ниже","<b>Шаг 3:</b> Данные компаний синхронизируются, а Gemini-ключ хранится только на этом устройстве"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Пропустить — использую только на одном устройстве",
     t2:"Gemini API-ключ",
     i2:["<b>Шаг 1:</b> Открой <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener noreferrer'>Google AI Studio</a>","<b>Шаг 2:</b> Создай Gemini API-ключ и скопируй его","<b>Шаг 3:</b> Вставь сюда"],
-    p2:"AIza...",l2:"Gemini API-ключ",
+    p2:"AQ... или AIza...",l2:"Gemini API-ключ",
     t3:"Всё готово!",
     d3:"Добавляй компании и нажимай «Найти через ИИ» — приложение само подберёт контакты.",
     autoLoaded:"API-ключ автоматически загружен из твоего GitHub-аккаунта ✓",
@@ -852,7 +852,7 @@ en:{
   discProfPh:"Profession / field",discLocPh:"Location — e.g. Vienna, Zurich, Munich, Bern",
   discSearch:"Search",discMore:"Load more",discAdd:"+ Add",discAdded:"✓ Added",
   discLoading:"Searching for companies…",discAdding:"Adding & loading info…",
-  discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",
+  discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",discErrAQ:"Google rejected this AQ. key. Create a new key in Google AI Studio or try again later.",
   discErrNet:"Cannot connect to Gemini.",discErrGen:"Error: {{m}}",
   discErrAccess:"Gemini access denied (403). Check API key restrictions and the Gemini project.",
   discEmpty:"No new companies found — try a different location or profession.",
@@ -870,7 +870,7 @@ en:{
   aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, Zürich, Munich — blank = anywhere",
   aiLoad:"Searching…",aiOk:"Done (web search).",aiOkN:"Done (no web search).",
   aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Gemini.",
-  aiEKey:"Invalid Gemini API key (401).",aiEAccess:"Gemini access denied (403). Check API key restrictions and the Gemini project.",aiEGen:"Error: {{m}}",
+  aiEKey:"Invalid Gemini API key (401).",aiEAQ:"Google rejected this AQ. key. Create a new key in Google AI Studio or try again later.",aiEAccess:"Gemini access denied (403). Check API key restrictions and the Gemini project.",aiEGen:"Error: {{m}}",
   cancel:"Cancel",cancelQ:"Close without saving?",
   saveC:"Save changes",delQ:"Delete this company?",
   eList:"No companies yet. Click «+ Company».",eFilter:"No results.",
@@ -924,12 +924,12 @@ en:{
     s0:"Language",s1:"GitHub",s2:"API Key",s3:"Ready",
     t0:"Choose language",
     t1:"Connect GitHub",
-    i1:["<b>Step 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Create GitHub token</a> (only «gist» scope needed)","<b>Step 2:</b> Copy the token and paste it below","<b>Step 3:</b> The app saves your API key in the token — on your phone enter the same token to restore everything"],
+    i1:["<b>Step 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Create GitHub token</a> (only «gist» scope needed)","<b>Step 2:</b> Copy the token and paste it below","<b>Step 3:</b> Company data is synced; the Gemini key stays only on this device"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Skip — I only use this on one device",
     t2:"Gemini API Key",
     i2:["<b>Step 1:</b> Open <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener noreferrer'>Google AI Studio</a>","<b>Step 2:</b> Create and copy a Gemini API key","<b>Step 3:</b> Paste it below"],
-    p2:"AIza...",l2:"Gemini API key",
+    p2:"AQ... or AIza...",l2:"Gemini API key",
     t3:"All set!",
     d3:"Add companies and click «Find data with AI» — the app looks up contacts automatically.",
     autoLoaded:"API key loaded automatically from your GitHub account ✓",
@@ -1124,9 +1124,9 @@ async function ghFetch(method,path,body){
   }finally{clearTimeout(timer);}
 }
 
-// Gist payload always includes the Gemini key so it syncs too
+// Never put the Gemini key in a Gist; it must remain device-local.
 function buildGistPayload(){
-  return{updatedAt:Date.now(),geminiKey,companies,blueprint,blueprintTs:parseInt(localStorage.getItem(SK_BP_TS)||"0")};
+  return{updatedAt:Date.now(),companies,blueprint,blueprintTs:parseInt(localStorage.getItem(SK_BP_TS)||"0")};
 }
 
 // Merges two company lists by id: for ids present in both, keeps whichever
@@ -1169,8 +1169,6 @@ async function pullGist(){
     const data=await ghFetch("GET","gists/"+gistId);
     const raw=data.files?.[GF]?.content;if(!raw)throw new Error("no file");
     const p=JSON.parse(raw);
-    // Always update Gemini key from gist (keeps keys in sync across devices)
-    if(p.geminiKey&&p.geminiKey!==geminiKey){geminiKey=p.geminiKey;localStorage.setItem(SK_GEMINI,geminiKey);}
     // Sync blueprint — newer timestamp wins
     if(p.blueprint&&Array.isArray(p.blueprint)){
       const localTs=parseInt(localStorage.getItem(SK_BP_TS)||"0");
@@ -1197,7 +1195,7 @@ async function pullGist(){
   finally{_syncLock=false;}
 }
 
-// Returns {geminiKey} from existing gist or null
+// Returns company data from an existing gist without reading credentials.
 async function findExistingGist(pat){
   const tmp=ghPat;ghPat=pat;
   try{
@@ -1208,7 +1206,7 @@ async function findExistingGist(pat){
     const full=await ghFetch("GET","gists/"+gistId);
     const raw=full.files?.[GF]?.content;
     const p=raw?JSON.parse(raw):{};
-    return{geminiKey:p.geminiKey||"",companies:p.companies||[]};
+    return{companies:p.companies||[]};
   }catch(e){ghPat=tmp;throw e;}
 }
 
@@ -1218,7 +1216,6 @@ async function connectGist(pat){
   try{
     const found=await findExistingGist(pat);
     if(found){
-      if(found.geminiKey){geminiKey=found.geminiKey;localStorage.setItem(SK_GEMINI,geminiKey);}
       companies=mergeCompanies(companies,found.companies||[]);
       localStorage.setItem(SK,JSON.stringify(companies));
       syncTs=Date.now();localStorage.setItem(SK_STS,syncTs);
@@ -1231,7 +1228,7 @@ async function connectGist(pat){
       syncTs=Date.now();localStorage.setItem(SK_STS,syncTs);
     }
     setSyncState("ok");renderSyncBar();renderSettings();
-    return{geminiKey};
+    return{};
   }catch(e){
     setSyncState("err",e.status===401?t("syncEPat"):e.message);
     ghPat="";gistId="";localStorage.removeItem(SK_PAT);localStorage.removeItem(SK_GIST);
@@ -1326,10 +1323,19 @@ function apiErrorDetail(message){
     return data.error?.status||data.error?.message||"";
   }catch(_){return "";}
 }
+function apiErrorReason(message){
+  try{
+    const data=JSON.parse(message);
+    return data.error?.details?.find(d=>d.reason)?.reason||"";
+  }catch(_){return "";}
+}
 function aiErr(e){
   const s=e.status,m=e.message||"";
   if(s===429||m.includes("429"))return t("aiE429",{r:utc(rlCache.resetAt)});
-  if(s===401){const d=apiErrorDetail(m);return t("aiEKey")+(d?" "+d:"");}
+  if(s===401){
+    if(apiErrorReason(m)==="ACCESS_TOKEN_TYPE_UNSUPPORTED")return t("aiEAQ");
+    const d=apiErrorDetail(m);return t("aiEKey")+(d?" "+d:"");
+  }
   if(s===403){const d=apiErrorDetail(m);return t("aiEAccess")+(d?" "+d:"");}
   if(m.includes("Failed to fetch")||m.includes("NetworkError"))return t("aiENet");
   return t("aiEGen",{m:m.slice(0,60)});
@@ -1733,10 +1739,9 @@ async function renderOb(){
       const btn=document.getElementById("obNext");btn.disabled=true;
       infoEl.textContent=t("syncing");
       try{
-        const result=await connectGist(v);
+        await connectGist(v);
         lang=obLang;localStorage.setItem(SK_LANG,lang);
-        // If the gist had a Gemini key, skip step 2
-        if(result&&result.geminiKey&&geminiKey){obStep=3;}else{obStep=2;}
+        obStep=geminiKey?3:2;
         renderOb();
       }catch(e){errEl.textContent=e.message||t("syncEPat");btn.disabled=false;infoEl.textContent="";}
     });
@@ -1765,8 +1770,6 @@ async function renderOb(){
       nxt.addEventListener("click",()=>{
         const v=inp.value.trim();if(!isGeminiKey(v)){document.getElementById("obKeyErr").textContent="Invalid Gemini API key";return;}
         geminiKey=v;lang=obLang;localStorage.setItem(SK_GEMINI,geminiKey);localStorage.setItem(SK_LANG,lang);
-        // If github connected, push key to gist
-        if(ghPat&&gistId)pushGist();
         obStep=3;renderOb();
       });
     }else{
@@ -2274,7 +2277,10 @@ async function callGeminiDisc(prof,loc,page){
 }
 
 function discErrMsg(e){
-  if(e.status===401){const d=apiErrorDetail(e.message||"");return t("discErrKey")+(d?" "+d:"");}
+  if(e.status===401){
+    if(apiErrorReason(e.message||"")==="ACCESS_TOKEN_TYPE_UNSUPPORTED")return t("discErrAQ");
+    const d=apiErrorDetail(e.message||"");return t("discErrKey")+(d?" "+d:"");
+  }
   if(e.status===403){const d=apiErrorDetail(e.message||"");return t("discErrAccess")+(d?" "+d:"");}
   if(e.status===429||e.message?.includes("429")||e.message?.includes("Rate limit")||e.message?.includes("rate_limit")){
     const reset=utcStr(rlCache.resetAt);
