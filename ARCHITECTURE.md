@@ -98,7 +98,7 @@ mergeCompanies(local, rem) → union by id, newer updatedAt wins per record
 ```
 bPrompt(name, prof, loc)   → builds system + user prompt for contact lookup
 callGemini(name, prof, loc) → POST to Gemini with Google Search grounding, 30s timeout
-aiFill(name, prof, loc)    → calls Gemini 2.5 Flash for grounded JSON
+aiFill(name, prof, loc)    → calls Gemini 3.5 Flash-Lite for grounded JSON
 runAi(...)                 → drives UI state around aiFill()
 findDatesAi(name, prof)    → finds application open/deadline dates (unused in current UI)
 buildDiscPrompt(...)        → prompt for company discovery (location-strict)

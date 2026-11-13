@@ -75,7 +75,7 @@ Click **📄 PDF** in the top bar to download a styled table with all companies,
 | Storage | `localStorage` |
 | Sync | GitHub Gist API |
 | Disk auto-save | File System Access API + IndexedDB |
-| AI | Gemini REST API (`gemini-2.5-flash` with Google Search grounding) |
+| AI | Gemini REST API (`gemini-3.5-flash-lite` with Google Search grounding) |
 | PDF | jsPDF + AutoTable (loaded on demand from cdnjs) |
 | Languages | Built-in i18n (DE / RU / EN) |
 | Framework | None — vanilla HTML + CSS + JS, single file |
