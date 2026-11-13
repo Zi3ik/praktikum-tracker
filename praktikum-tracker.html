@@ -656,6 +656,7 @@ de:{
   discLoading:"Suche Firmen…",discAdding:"Füge hinzu & lade Infos…",
   discFound:"{{n}} neue Firmen gefunden:",discErrKey:"Ungültiger API-Schlüssel.",
   discErrNet:"Keine Verbindung zu Gemini.",discErrGen:"Fehler: {{m}}",
+  discErrAccess:"Gemini-Zugriff verweigert (403). Prüfe API-Einschränkungen und das Gemini-Projekt.",
   discEmpty:"Keine neuen Firmen gefunden — versuche anderen Ort oder Beruf.",
   archive:"Archiv",archiveBtn:"📦 Archivieren",unarchiveBtn:"↩ Wiederherstellen",
   archiveConfirm:"Firma ins Archiv verschieben? Sie bleibt erhalten, wird aber ausgeblendet.",
@@ -671,7 +672,7 @@ de:{
   aiLoc:"📍 Suchort für KI (optional)",aiLocPh:"z.B. Wien, Zürich, München — leer = überall",
   aiLoad:"Suche…",aiOk:"Fertig (Websuche).",aiOkN:"Fertig (ohne Live-Suche).",
   aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiENet:"Keine Verbindung zu Gemini.",
-  aiEKey:"Ungültiger API-Schlüssel.",aiEGen:"Fehler: {{m}}",
+  aiEKey:"Ungültiger Gemini-API-Schlüssel (401).",aiEAccess:"Gemini-Zugriff verweigert (403). Prüfe API-Einschränkungen und das Gemini-Projekt.",aiEGen:"Fehler: {{m}}",
   cancel:"Abbrechen",cancelQ:"Ohne Speichern schließen?",
   saveC:"Änderungen speichern",delQ:"Firma löschen?",
   eList:"Liste leer. «+ Firma» klicken.",eFilter:"Keine Treffer.",
@@ -754,6 +755,7 @@ ru:{
   discLoading:"Ищу компании…",discAdding:"Добавляю и загружаю данные…",
   discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",
   discErrNet:"Нет связи с Gemini.",discErrGen:"Ошибка: {{m}}",
+  discErrAccess:"Gemini запретил доступ (403). Проверь ограничения API-ключа и проект Gemini.",
   discEmpty:"Новых компаний не найдено — попробуй другое место или профессию.",
   archive:"Архив",archiveBtn:"📦 В архив",unarchiveBtn:"↩ Восстановить",
   archiveConfirm:"Переместить компанию в архив? Она сохранится, но исчезнет из списка.",
@@ -769,7 +771,7 @@ ru:{
   aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, Zürich, München — пусто = везде",
   aiLoad:"Ищу…",aiOk:"Готово (веб-поиск).",aiOkN:"Готово (без поиска).",
   aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Gemini.",
-  aiEKey:"Неверный API-ключ.",aiEGen:"Ошибка: {{m}}",
+  aiEKey:"Неверный Gemini API-ключ (401).",aiEAccess:"Gemini запретил доступ (403). Проверь ограничения API-ключа и проект Gemini.",aiEGen:"Ошибка: {{m}}",
   cancel:"Отмена",cancelQ:"Закрыть без сохранения?",
   saveC:"Сохранить изменения",delQ:"Удалить компанию?",
   eList:"Список пуст.",eFilter:"Ничего не найдено.",
@@ -852,6 +854,7 @@ en:{
   discLoading:"Searching for companies…",discAdding:"Adding & loading info…",
   discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",
   discErrNet:"Cannot connect to Gemini.",discErrGen:"Error: {{m}}",
+  discErrAccess:"Gemini access denied (403). Check API key restrictions and the Gemini project.",
   discEmpty:"No new companies found — try a different location or profession.",
   archive:"Archive",archiveBtn:"📦 Archive",unarchiveBtn:"↩ Restore",
   archiveConfirm:"Move company to archive? It stays saved but is hidden from the list.",
@@ -867,7 +870,7 @@ en:{
   aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, Zürich, Munich — blank = anywhere",
   aiLoad:"Searching…",aiOk:"Done (web search).",aiOkN:"Done (no web search).",
   aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Gemini.",
-  aiEKey:"Invalid API key.",aiEGen:"Error: {{m}}",
+  aiEKey:"Invalid Gemini API key (401).",aiEAccess:"Gemini access denied (403). Check API key restrictions and the Gemini project.",aiEGen:"Error: {{m}}",
   cancel:"Cancel",cancelQ:"Close without saving?",
   saveC:"Save changes",delQ:"Delete this company?",
   eList:"No companies yet. Click «+ Company».",eFilter:"No results.",
@@ -1293,7 +1296,8 @@ async function callGemini(name,prof,loc){
 function aiErr(e){
   const s=e.status,m=e.message||"";
   if(s===429||m.includes("429"))return t("aiE429",{r:utc(rlCache.resetAt)});
-  if(s===401||s===403)return t("aiEKey");
+  if(s===401)return t("aiEKey");
+  if(s===403)return t("aiEAccess");
   if(m.includes("Failed to fetch")||m.includes("NetworkError"))return t("aiENet");
   return t("aiEGen",{m:m.slice(0,60)});
 }
@@ -2225,7 +2229,8 @@ async function callGeminiDisc(prof,loc,page){
 }
 
 function discErrMsg(e){
-  if(e.status===401||e.status===403)return t("discErrKey");
+  if(e.status===401)return t("discErrKey");
+  if(e.status===403)return t("discErrAccess");
   if(e.status===429||e.message?.includes("429")||e.message?.includes("Rate limit")||e.message?.includes("rate_limit")){
     const reset=utcStr(rlCache.resetAt);
     return t("aiE429",{r:reset})+" "+{"de":"«Ещё» wird nach dem Reset wieder funktionieren.","ru":"Кнопка «Ещё» снова заработает после сброса.","en":"The «More» button will work again after reset."}[lang];
