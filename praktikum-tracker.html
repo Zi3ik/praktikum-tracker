@@ -1289,18 +1289,24 @@ async function callGemini(name,prof,loc){
       headers:{"Content-Type":"application/json","x-goog-api-key":geminiKey},
       body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.1,maxOutputTokens:280}})});
     try{updRl(r.headers);}catch(e){}
-    if(!r.ok){const e=await r.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,120)),{status:r.status});}
+    if(!r.ok){const e=await r.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,500)),{status:r.status});}
     return geminiJson(await r.json());
   }catch(e){
     if(e.name==="AbortError")throw new Error(t("aiENet")+" (timeout)");
     throw e;
   }finally{clearTimeout(timer);}
 }
+function apiErrorDetail(message){
+  try{
+    const data=JSON.parse(message);
+    return data.error?.status||data.error?.message||"";
+  }catch(_){return "";}
+}
 function aiErr(e){
   const s=e.status,m=e.message||"";
   if(s===429||m.includes("429"))return t("aiE429",{r:utc(rlCache.resetAt)});
-  if(s===401)return t("aiEKey");
-  if(s===403)return t("aiEAccess");
+  if(s===401){const d=apiErrorDetail(m);return t("aiEKey")+(d?" "+d:"");}
+  if(s===403){const d=apiErrorDetail(m);return t("aiEAccess")+(d?" "+d:"");}
   if(m.includes("Failed to fetch")||m.includes("NetworkError"))return t("aiENet");
   return t("aiEGen",{m:m.slice(0,60)});
 }
@@ -2151,7 +2157,7 @@ Use empty string if genuinely not found or unknown. Never invent dates — if un
     body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.1,maxOutputTokens:200}})
   });
   try{updRl(res.headers);}catch(e){}
-  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
+  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,500)),{status:res.status});}
   const result=geminiJson(await res.json());
   // Post-process: if date is in the past, try shifting it one year forward
   function shiftIfPast(iso){
@@ -2219,7 +2225,7 @@ async function callGeminiDisc(prof,loc,page){
     throw e;
   }finally{clearTimeout(timer);}
   try{updRl(res.headers);}catch(e){}
-  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
+  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,500)),{status:res.status});}
   const raw=await res.json();
   const text=raw.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
   const m=text.match(/\[[\s\S]*\]/);
@@ -2232,8 +2238,8 @@ async function callGeminiDisc(prof,loc,page){
 }
 
 function discErrMsg(e){
-  if(e.status===401)return t("discErrKey");
-  if(e.status===403)return t("discErrAccess");
+  if(e.status===401){const d=apiErrorDetail(e.message||"");return t("discErrKey")+(d?" "+d:"");}
+  if(e.status===403){const d=apiErrorDetail(e.message||"");return t("discErrAccess")+(d?" "+d:"");}
   if(e.status===429||e.message?.includes("429")||e.message?.includes("Rate limit")||e.message?.includes("rate_limit")){
     const reset=utcStr(rlCache.resetAt);
     return t("aiE429",{r:reset})+" "+{"de":"«Ещё» wird nach dem Reset wieder funktionieren.","ru":"Кнопка «Ещё» снова заработает после сброса.","en":"The «More» button will work again after reset."}[lang];
