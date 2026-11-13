@@ -1265,6 +1265,24 @@ function renderSyncBar(){
 }
 
 // ── AI ────────────────────────────────────────────────────
+function geminiKeyMeta(){
+  return{
+    prefix:geminiKey.slice(0,4),
+    suffix:geminiKey.slice(-4),
+    length:geminiKey.length,
+    hasWhitespace:/\s/.test(geminiKey),
+    hasMask:geminiKey.includes("...")
+  };
+}
+function geminiLog(event,details={}){
+  const entry={time:new Date().toISOString(),event,...details};
+  console.info("[Gemini]",entry);
+  try{
+    const logs=JSON.parse(localStorage.getItem("prak_gemini_log")||"[]");
+    logs.push(entry);
+    localStorage.setItem("prak_gemini_log",JSON.stringify(logs.slice(-30)));
+  }catch(_){}
+}
 function bPrompt(name,prof,loc){
   const p=prof?` The student seeks a "${prof}" internship/Ferialpraktikum.`:"";
   const l=loc?` Location: "${loc}".`:"";
@@ -1281,6 +1299,7 @@ function geminiJson(data){
 }
 async function callGemini(name,prof,loc){
   const{sys,usr}=bPrompt(name,prof,loc);
+  geminiLog("request",{phase:"contact",model:"gemini-2.5-flash",endpoint:"generateContent",key:geminiKeyMeta(),googleSearch:true,systemChars:sys.length,userChars:usr.length});
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),30000);
   try{
@@ -1288,8 +1307,13 @@ async function callGemini(name,prof,loc){
       method:"POST",signal:ctrl.signal,
       headers:{"Content-Type":"application/json","x-goog-api-key":geminiKey},
       body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.1,maxOutputTokens:280}})});
+    geminiLog("response",{phase:"contact",status:r.status,ok:r.ok,contentType:r.headers.get("content-type")||""});
     try{updRl(r.headers);}catch(e){}
-    if(!r.ok){const e=await r.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,500)),{status:r.status});}
+    if(!r.ok){
+      const e=await r.text().catch(()=>"");
+      geminiLog("error",{phase:"contact",status:r.status,apiError:apiErrorDetail(e),response:e.slice(0,500)});
+      throw Object.assign(new Error(e.slice(0,500)),{status:r.status});
+    }
     return geminiJson(await r.json());
   }catch(e){
     if(e.name==="AbortError")throw new Error(t("aiENet")+" (timeout)");
@@ -2151,13 +2175,19 @@ If a company has annual deadlines and the ${year} deadline has already passed, r
 Return ONLY valid JSON no markdown: {"openDate":"YYYY-MM-DD","deadline":"YYYY-MM-DD","notes":"","confidence":"high|medium|low"}
 Use empty string if genuinely not found or unknown. Never invent dates — if unsure use empty string.`;
   const usr=`Company: "${name}", Austria.${prof?` Profession: "${prof}".`:""} Find UPCOMING (future) dates: when applications OPEN (Bewerbungsstart) and the DEADLINE (Bewerbungsschluss/Einsendeschluss) for Ferialpraktikum/internship. Today: ${nowStr}.`;
+  geminiLog("request",{phase:"dates",model:"gemini-2.5-flash",endpoint:"generateContent",key:geminiKeyMeta(),googleSearch:true,systemChars:sys.length,userChars:usr.length});
   const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",{
     method:"POST",
     headers:{"Content-Type":"application/json","x-goog-api-key":geminiKey},
     body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.1,maxOutputTokens:200}})
   });
+  geminiLog("response",{phase:"dates",status:res.status,ok:res.ok,contentType:res.headers.get("content-type")||""});
   try{updRl(res.headers);}catch(e){}
-  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,500)),{status:res.status});}
+  if(!res.ok){
+    const e=await res.text().catch(()=>"");
+    geminiLog("error",{phase:"dates",status:res.status,apiError:apiErrorDetail(e),response:e.slice(0,500)});
+    throw Object.assign(new Error(e.slice(0,500)),{status:res.status});
+  }
   const result=geminiJson(await res.json());
   // Post-process: if date is in the past, try shifting it one year forward
   function shiftIfPast(iso){
@@ -2211,6 +2241,7 @@ function locationMatches(address, loc){
 async function callGeminiDisc(prof,loc,page){
   const exclude=companies.map(c=>c.name);
   const{sys,usr}=buildDiscPrompt(prof,loc,exclude,page);
+  geminiLog("request",{phase:"discovery",model:"gemini-2.5-flash",endpoint:"generateContent",key:geminiKeyMeta(),googleSearch:true,systemChars:sys.length,userChars:usr.length});
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),45000);
   let res;
@@ -2220,12 +2251,17 @@ async function callGeminiDisc(prof,loc,page){
       headers:{"Content-Type":"application/json","x-goog-api-key":geminiKey},
       body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.3,maxOutputTokens:700}})
     });
+    geminiLog("response",{phase:"discovery",status:res.status,ok:res.ok,contentType:res.headers.get("content-type")||""});
   }catch(e){
     if(e.name==="AbortError")throw new Error(t("discErrNet")+" (timeout)");
     throw e;
   }finally{clearTimeout(timer);}
   try{updRl(res.headers);}catch(e){}
-  if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,500)),{status:res.status});}
+  if(!res.ok){
+    const e=await res.text().catch(()=>"");
+    geminiLog("error",{phase:"discovery",status:res.status,apiError:apiErrorDetail(e),response:e.slice(0,500)});
+    throw Object.assign(new Error(e.slice(0,500)),{status:res.status});
+  }
   const raw=await res.json();
   const text=raw.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
   const m=text.match(/\[[\s\S]*\]/);
