@@ -26,7 +26,7 @@ Tracker is a **zero-backend, single-file web application**. All logic, UI, and d
 └─────────────────────────────────────────────────────┘
            │                          │
     ┌──────┴──────┐           ┌───────┴──────┐
-    │  Groq API   │           │  GitHub API  │
+    │ Gemini API  │           │  GitHub API  │
     │ (AI search) │           │ (Gist sync)  │
     └─────────────┘           └──────────────┘
 ```
@@ -65,7 +65,7 @@ ob(key)        → same but for onboarding strings
 companies[]    → array of company objects (source of truth)
 blueprint[]    → task checklist template
 lang           → current language ("de" | "ru" | "en")
-groqKey        → Groq API key (localStorage)
+geminiKey      → Gemini API key (localStorage)
 ghPat          → GitHub PAT (localStorage)
 gistId         → ID of sync Gist (localStorage)
 activeFilter   → status filter ("all" | "not_sent" | ...)
@@ -87,22 +87,22 @@ mergeCompanies(local, remote) → per-record merge by updatedAt timestamp
 
 ### Sync (GitHub Gist)
 ```
-buildGistPayload()         → {updatedAt, groqKey, companies, blueprint, blueprintTs}
+buildGistPayload()         → {updatedAt, geminiKey, companies, blueprint, blueprintTs}
 pushGist()                 → PATCH gist with current payload (mutex-protected)
 pullGist()                 → GET gist, merge, push back if changed
-connectGist(pat)           → find or create gist, merge, return {groqKey}
+connectGist(pat)           → find or create gist, merge, return {geminiKey}
 mergeCompanies(local, rem) → union by id, newer updatedAt wins per record
 ```
 
-### AI (Groq API)
+### AI (Gemini API)
 ```
 bPrompt(name, prof, loc)   → builds system + user prompt for contact lookup
-callGroq(model, name, ...)  → POST to Groq, 30s timeout, returns parsed JSON
-aiFill(name, prof, loc)    → tries model chain [compound-beta-mini → llama-3.3-70b → llama-3.1-8b]
+callGemini(name, prof, loc) → POST to Gemini with Google Search grounding, 30s timeout
+aiFill(name, prof, loc)    → calls Gemini 2.5 Flash for grounded JSON
 runAi(...)                 → drives UI state around aiFill()
 findDatesAi(name, prof)    → finds application open/deadline dates (unused in current UI)
 buildDiscPrompt(...)        → prompt for company discovery (location-strict)
-callGroqDisc(prof, loc, p) → POST to Groq with web search, 45s timeout
+callGeminiDisc(prof, loc, p) → POST to Gemini with Google Search grounding, 45s timeout
 ```
 
 ### Render Pipeline
@@ -130,7 +130,7 @@ writeToFile()    → createWritable → write JSON → close
 | Concern | Mitigation |
 |---------|------------|
 | XSS | All user data passes through `esc()` before innerHTML. `textContent` used where possible. |
-| Token exposure | `ghPat` and `groqKey` stored in localStorage only. Masked as `type="password"` in UI. Never logged. |
+| Token exposure | `ghPat` and `geminiKey` stored in localStorage only. Masked as `type="password"` in UI. Never logged. |
 | CDN tampering | SRI `integrity` hash on QRCode script. jsPDF loaded on demand with SRI support. |
 | Clickjacking | CSP `frame-ancestors 'self'` |
 | Prototype pollution | JSON.parse results go into known typed variables, never `Object.assign({}, parsed)` spread |
@@ -138,7 +138,7 @@ writeToFile()    → createWritable → write JSON → close
 | Import injection | Imported JSON validated and sanitized field-by-field, max 500 entries, max 5MB |
 | CSRF | API calls use Authorization header (not cookies) — inherently CSRF-safe |
 | External links | All `target="_blank"` have `rel="noopener noreferrer"` |
-| Network timeouts | 15s on GitHub API, 30s on Groq AI, 45s on discovery |
+| Network timeouts | 15s on GitHub API, 30s on Gemini AI, 45s on discovery |
 
 **Known limitations (acceptable for a local personal app):**
 - `unsafe-inline` in CSP is required because JS lives inside the HTML file
@@ -176,7 +176,7 @@ Company {
 
 GistPayload {
   updatedAt: number
-  groqKey: string     // synced so new devices get key automatically
+  geminiKey: string   // synced so new devices get key automatically
   companies: Company[]
   blueprint: string[] // checklist template labels
   blueprintTs: number // timestamp of last blueprint change
@@ -205,10 +205,10 @@ No npm, no bundler, no build step.
 Step 0: Language selection (DE / RU / EN)
     ↓
 Step 1: GitHub PAT (optional)
-    ├── PAT entered → connectGist() → if groqKey in Gist → skip Step 2
+    ├── PAT entered → connectGist() → if geminiKey in Gist → skip Step 2
     └── Skipped → go to Step 2
     ↓
-Step 2: Groq API key
+Step 2: Gemini API key
     ├── Auto-loaded from Gist → show confirmation, skip input
     └── Manual entry → save to localStorage + push to Gist
     ↓

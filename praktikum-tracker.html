@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Praktikum">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.groq.com https://api.github.com https://gist.githubusercontent.com; manifest-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'none'; object-src 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com https://api.github.com https://gist.githubusercontent.com; manifest-src 'self' blob:; frame-ancestors 'self'; base-uri 'self'; form-action 'none'; object-src 'none';">
 <title>Praktikum Tracker</title>
 <style>
 :root{
@@ -555,13 +555,13 @@ footer.note{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;
       <button class="btn-ghost bar-btn" id="setGhShowBtn" style="font-size:11px;">📲 QR</button>
     </div>
 
-    <!-- Groq key row -->
+    <!-- Gemini key row -->
     <div class="set-row">
       <div class="set-lbl">
-        <b id="setLblGroq"></b>
-        <small id="setGroqStatus" style="font-family:monospace;font-size:11px;color:var(--faint);margin-top:2px;display:block;"></small>
+        <b id="setLblGemini"></b>
+        <small id="setGeminiStatus" style="font-family:monospace;font-size:11px;color:var(--faint);margin-top:2px;display:block;"></small>
       </div>
-      <button class="btn-ghost bar-btn" id="setGroqBtn"></button>
+      <button class="btn-ghost bar-btn" id="setGeminiBtn"></button>
     </div>
 
     <!-- Language -->
@@ -655,7 +655,7 @@ de:{
   discSearch:"Suchen",discMore:"Mehr anzeigen",discAdd:"+ Hinzufügen",discAdded:"✓ Dabei",
   discLoading:"Suche Firmen…",discAdding:"Füge hinzu & lade Infos…",
   discFound:"{{n}} neue Firmen gefunden:",discErrKey:"Ungültiger API-Schlüssel.",
-  discErrNet:"Keine Verbindung zu Groq.",discErrGen:"Fehler: {{m}}",
+  discErrNet:"Keine Verbindung zu Gemini.",discErrGen:"Fehler: {{m}}",
   discEmpty:"Keine neuen Firmen gefunden — versuche anderen Ort oder Beruf.",
   archive:"Archiv",archiveBtn:"📦 Archivieren",unarchiveBtn:"↩ Wiederherstellen",
   archiveConfirm:"Firma ins Archiv verschieben? Sie bleibt erhalten, wird aber ausgeblendet.",
@@ -670,7 +670,7 @@ de:{
   aiFill:"KI-Daten suchen",aiDisc:"KI kann sich irren — bitte prüfen.",
   aiLoc:"📍 Suchort für KI (optional)",aiLocPh:"z.B. Wien, Zürich, München — leer = überall",
   aiLoad:"Suche…",aiOk:"Fertig (Websuche).",aiOkN:"Fertig (ohne Live-Suche).",
-  aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiENet:"Keine Verbindung zu Groq.",
+  aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiENet:"Keine Verbindung zu Gemini.",
   aiEKey:"Ungültiger API-Schlüssel.",aiEGen:"Fehler: {{m}}",
   cancel:"Abbrechen",cancelQ:"Ohne Speichern schließen?",
   saveC:"Änderungen speichern",delQ:"Firma löschen?",
@@ -701,7 +701,7 @@ de:{
   rlLow:"⚠ Nur <b>{{r}} Anfragen</b> übrig.",rlOut:"⛔ Limit. Wieder ab <b>{{t}} UTC</b>.",
   setTitle:"Einstellungen",secAcc:"Account",secSync:"Synchronisation",secStore:"Speicher",
   lGh:"GitHub Account",lGhSub:" · Sync + API-Key Backup",
-  lGroq:"Groq API-Schlüssel",lGroqSub:" · KI-Suche",
+  lGemini:"Gemini API-Schlüssel",lGeminiSub:" · KI-Suche mit Google-Suche",
   lLang:"Sprache",lAs:"Auto-Speichern",lAsSub:" · Disk (Chrome/Edge)",
   secTheme:"🎨 Design",lThemeMode:"Modus",lThemeAccent:"Akzentfarbe",
   themeDark:"Dunkel",themeLight:"Hell",themeCustom:"Eigene Farbe",
@@ -709,7 +709,7 @@ de:{
   heroProgress:"Fortschritt",
   lSyncNow:"Jetzt synchronisieren",lSyncNowSub:" · Neueste Daten holen",
   btnGhCon:"Verbinden",btnGhChg:"Wechseln",btnGhDis:"Trennen",
-  btnGroqChg:"Ändern",btnSyncNow:"Sync",btnClose:"Schließen",
+  btnGeminiChg:"Ändern",btnSyncNow:"Sync",btnClose:"Schließen",
   asConn:"Auto-Speichern → <b>{{n}}</b>",asNPerm:"«{{n}}» — Zugriff erlauben",
   asDisc:"Nur Browser.",asBrave:"Brave blockiert. Öffne brave://flags/#file-system-access-api",
   asUns:"Nur Chrome/Edge.",asIf:"Datei im Browser öffnen.",
@@ -718,7 +718,7 @@ de:{
   syncE:"Sync-Fehler",syncNone:"Kein Sync.",syncEPat:"Ungültiger GitHub-Token.",
   asCon:"Verbinden",asPerm:"Erlauben",asChg:"Wechseln",
   ghPrompt:"GitHub Personal Access Token eingeben (Scope: gist):",
-  groqPrompt:"Neuen Groq API-Schlüssel eingeben:",
+  geminiPrompt:"Neuen Gemini API-Schlüssel eingeben:",
   syncNowBtn:"Sync",
   ob:{
     sub:"Ferialpraktikum Tracker · HTL Donaustadt",
@@ -728,9 +728,9 @@ de:{
     i1:["<b>Schritt 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>GitHub Token erstellen</a> (nur «gist» Scope)","<b>Schritt 2:</b> Token kopieren und unten einfügen","<b>Schritt 3:</b> App speichert deinen API-Schlüssel im Token — auf dem Handy einfach denselben Token eingeben"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Überspringen — nur auf einem Gerät",
-    t2:"Groq API-Schlüssel",
-    i2:["<b>Schritt 1:</b> <a href='https://console.groq.com/keys' target='_blank' rel='noopener noreferrer'>console.groq.com/keys</a> öffnen (kostenlos)","<b>Schritt 2:</b> Konto erstellen → «Create API Key» → kopieren","<b>Schritt 3:</b> Hier einfügen"],
-    p2:"gsk_...",l2:"API-Schlüssel",
+    t2:"Gemini API-Schlüssel",
+    i2:["<b>Schritt 1:</b> <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener noreferrer'>Google AI Studio öffnen</a>","<b>Schritt 2:</b> Gemini API-Schlüssel erstellen und kopieren","<b>Schritt 3:</b> Hier einfügen"],
+    p2:"AIza...",l2:"Gemini API-Schlüssel",
     t3:"Alles bereit!",
     d3:"Firmen hinzufügen und KI Kontaktdaten suchen lassen.",
     autoLoaded:"API-Schlüssel wurde automatisch aus deinem GitHub-Account geladen ✓",
@@ -753,7 +753,7 @@ ru:{
   discSearch:"Искать",discMore:"Ещё",discAdd:"+ Добавить",discAdded:"✓ Добавлено",
   discLoading:"Ищу компании…",discAdding:"Добавляю и загружаю данные…",
   discFound:"{{n}} новых компаний найдено:",discErrKey:"Неверный API-ключ.",
-  discErrNet:"Нет связи с Groq.",discErrGen:"Ошибка: {{m}}",
+  discErrNet:"Нет связи с Gemini.",discErrGen:"Ошибка: {{m}}",
   discEmpty:"Новых компаний не найдено — попробуй другое место или профессию.",
   archive:"Архив",archiveBtn:"📦 В архив",unarchiveBtn:"↩ Восстановить",
   archiveConfirm:"Переместить компанию в архив? Она сохранится, но исчезнет из списка.",
@@ -768,7 +768,7 @@ ru:{
   aiFill:"Найти через ИИ",aiDisc:"ИИ может ошибаться — проверяй.",
   aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, Zürich, München — пусто = везде",
   aiLoad:"Ищу…",aiOk:"Готово (веб-поиск).",aiOkN:"Готово (без поиска).",
-  aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Groq.",
+  aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Gemini.",
   aiEKey:"Неверный API-ключ.",aiEGen:"Ошибка: {{m}}",
   cancel:"Отмена",cancelQ:"Закрыть без сохранения?",
   saveC:"Сохранить изменения",delQ:"Удалить компанию?",
@@ -799,7 +799,7 @@ ru:{
   rlLow:"⚠ Осталось <b>{{r}} запросов</b>.",rlOut:"⛔ Лимит. Снова с <b>{{t}} UTC</b>.",
   setTitle:"Настройки",secAcc:"Аккаунт",secSync:"Синхронизация",secStore:"Хранилище",
   lGh:"GitHub аккаунт",lGhSub:" · Синхронизация + резервный API-ключ",
-  lGroq:"Groq API-ключ",lGroqSub:" · ИИ-поиск",
+  lGemini:"Gemini API-ключ",lGeminiSub:" · ИИ-поиск с Google",
   lLang:"Язык",lAs:"Автосохранение",lAsSub:" · Файл на диск (Chrome/Edge)",
   secTheme:"🎨 Дизайн",lThemeMode:"Режим",lThemeAccent:"Акцентный цвет",
   themeDark:"Тёмная",themeLight:"Светлая",themeCustom:"Свой цвет",
@@ -807,7 +807,7 @@ ru:{
   heroProgress:"Прогресс",
   lSyncNow:"Синхронизировать",lSyncNowSub:" · Получить последние данные",
   btnGhCon:"Подключить",btnGhChg:"Сменить",btnGhDis:"Отключить",
-  btnGroqChg:"Сменить",btnSyncNow:"Синхр.",btnClose:"Закрыть",
+  btnGeminiChg:"Сменить",btnSyncNow:"Синхр.",btnClose:"Закрыть",
   asConn:"Автосохранение → <b>{{n}}</b>",asNPerm:"«{{n}}» — разрешить запись",
   asDisc:"Только браузер.",asBrave:"Brave блокирует. brave://flags/#file-system-access-api",
   asUns:"Только Chrome/Edge.",asIf:"Открой в браузере.",
@@ -816,7 +816,7 @@ ru:{
   syncE:"Ошибка синхронизации",syncNone:"Синхронизация не подключена.",syncEPat:"Неверный GitHub-токен.",
   asCon:"Подключить файл",asPerm:"Разрешить",asChg:"Сменить",
   ghPrompt:"Введи GitHub Personal Access Token (scope: gist):",
-  groqPrompt:"Введи новый Groq API-ключ:",
+  geminiPrompt:"Введи новый Gemini API-ключ:",
   syncNowBtn:"Синхр.",
   ob:{
     sub:"Трекер Ferialpraktikum · HTL Donaustadt",
@@ -826,9 +826,9 @@ ru:{
     i1:["<b>Шаг 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Создай GitHub-токен</a> (только scope «gist»)","<b>Шаг 2:</b> Скопируй токен и вставь ниже","<b>Шаг 3:</b> Приложение сохранит твой API-ключ в токене — на телефоне введи тот же токен и всё восстановится"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Пропустить — использую только на одном устройстве",
-    t2:"Groq API-ключ",
-    i2:["<b>Шаг 1:</b> Открой <a href='https://console.groq.com/keys' target='_blank' rel='noopener noreferrer'>console.groq.com/keys</a> (бесплатно)","<b>Шаг 2:</b> Создай аккаунт → «Create API Key» → скопируй","<b>Шаг 3:</b> Вставь сюда"],
-    p2:"gsk_...",l2:"API-ключ",
+    t2:"Gemini API-ключ",
+    i2:["<b>Шаг 1:</b> Открой <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener noreferrer'>Google AI Studio</a>","<b>Шаг 2:</b> Создай Gemini API-ключ и скопируй его","<b>Шаг 3:</b> Вставь сюда"],
+    p2:"AIza...",l2:"Gemini API-ключ",
     t3:"Всё готово!",
     d3:"Добавляй компании и нажимай «Найти через ИИ» — приложение само подберёт контакты.",
     autoLoaded:"API-ключ автоматически загружен из твоего GitHub-аккаунта ✓",
@@ -851,7 +851,7 @@ en:{
   discSearch:"Search",discMore:"Load more",discAdd:"+ Add",discAdded:"✓ Added",
   discLoading:"Searching for companies…",discAdding:"Adding & loading info…",
   discFound:"{{n}} new companies found:",discErrKey:"Invalid API key.",
-  discErrNet:"Cannot connect to Groq.",discErrGen:"Error: {{m}}",
+  discErrNet:"Cannot connect to Gemini.",discErrGen:"Error: {{m}}",
   discEmpty:"No new companies found — try a different location or profession.",
   archive:"Archive",archiveBtn:"📦 Archive",unarchiveBtn:"↩ Restore",
   archiveConfirm:"Move company to archive? It stays saved but is hidden from the list.",
@@ -866,7 +866,7 @@ en:{
   aiFill:"Find data with AI",aiDisc:"AI may make mistakes — always verify.",
   aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, Zürich, Munich — blank = anywhere",
   aiLoad:"Searching…",aiOk:"Done (web search).",aiOkN:"Done (no web search).",
-  aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Groq.",
+  aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Gemini.",
   aiEKey:"Invalid API key.",aiEGen:"Error: {{m}}",
   cancel:"Cancel",cancelQ:"Close without saving?",
   saveC:"Save changes",delQ:"Delete this company?",
@@ -897,7 +897,7 @@ en:{
   rlLow:"⚠ Only <b>{{r}} requests</b> left.",rlOut:"⛔ Limit reached. Again at <b>{{t}} UTC</b>.",
   setTitle:"Settings",secAcc:"Account",secSync:"Sync",secStore:"Storage",
   lGh:"GitHub Account",lGhSub:" · Sync + API Key backup",
-  lGroq:"Groq API Key",lGroqSub:" · AI search",
+  lGemini:"Gemini API Key",lGeminiSub:" · AI search with Google Search",
   lLang:"Language",lAs:"Auto-save",lAsSub:" · File on disk (Chrome/Edge)",
   secTheme:"🎨 Appearance",lThemeMode:"Mode",lThemeAccent:"Accent color",
   themeDark:"Dark",themeLight:"Light",themeCustom:"Custom color",
@@ -905,7 +905,7 @@ en:{
   heroProgress:"Progress",
   lSyncNow:"Sync now",lSyncNowSub:" · Pull latest data",
   btnGhCon:"Connect",btnGhChg:"Change",btnGhDis:"Disconnect",
-  btnGroqChg:"Change",btnSyncNow:"Sync",btnClose:"Close",
+  btnGeminiChg:"Change",btnSyncNow:"Sync",btnClose:"Close",
   asConn:"Auto-save → <b>{{n}}</b>",asNPerm:"«{{n}}» — allow write again",
   asDisc:"Browser only.",asBrave:"Brave blocks this. brave://flags/#file-system-access-api",
   asUns:"Chrome/Edge only.",asIf:"Open file in browser.",
@@ -914,7 +914,7 @@ en:{
   syncE:"Sync error",syncNone:"No sync connected.",syncEPat:"Invalid GitHub token.",
   asCon:"Connect file",asPerm:"Allow",asChg:"Change",
   ghPrompt:"Enter GitHub Personal Access Token (scope: gist):",
-  groqPrompt:"Enter new Groq API key:",
+  geminiPrompt:"Enter new Gemini API key:",
   syncNowBtn:"Sync",
   ob:{
     sub:"Ferialpraktikum Tracker · HTL Donaustadt",
@@ -924,9 +924,9 @@ en:{
     i1:["<b>Step 1:</b> <a href='https://github.com/settings/tokens/new?scopes=gist&description=Praktikum+Tracker' target='_blank' rel='noopener noreferrer'>Create GitHub token</a> (only «gist» scope needed)","<b>Step 2:</b> Copy the token and paste it below","<b>Step 3:</b> The app saves your API key in the token — on your phone enter the same token to restore everything"],
     p1:"ghp_...",l1:"GitHub Personal Access Token",
     skip1:"Skip — I only use this on one device",
-    t2:"Groq API Key",
-    i2:["<b>Step 1:</b> Open <a href='https://console.groq.com/keys' target='_blank' rel='noopener noreferrer'>console.groq.com/keys</a> (free)","<b>Step 2:</b> Create account → «Create API Key» → copy","<b>Step 3:</b> Paste below"],
-    p2:"gsk_...",l2:"API Key",
+    t2:"Gemini API Key",
+    i2:["<b>Step 1:</b> Open <a href='https://aistudio.google.com/apikey' target='_blank' rel='noopener noreferrer'>Google AI Studio</a>","<b>Step 2:</b> Create and copy a Gemini API key","<b>Step 3:</b> Paste it below"],
+    p2:"AIza...",l2:"Gemini API key",
     t3:"All set!",
     d3:"Add companies and click «Find data with AI» — the app looks up contacts automatically.",
     autoLoaded:"API key loaded automatically from your GitHub account ✓",
@@ -935,7 +935,7 @@ en:{
 }};
 
 // ── State ────────────────────────────────────────────────
-const SK="prak_v3",SK_LANG="prak_lang",SK_GROQ="prak_groq",SK_RL="prak_rl";
+const SK="prak_v3",SK_LANG="prak_lang",SK_GEMINI="prak_gemini",SK_RL="prak_rl";
 const SK_PAT="prak_gh_pat",SK_GIST="prak_gist_id",SK_STS="prak_sync_ts";
 const SK_BP="prak_blueprint",SK_BP_TS="prak_blueprint_ts";
 const SK_THEME_MODE="prak_theme_mode",SK_THEME_ACCENT="prak_theme_accent",SK_THEME_CUSTOM="prak_theme_custom";
@@ -943,7 +943,6 @@ const HDB="prak_fs3",HST="handles",HK="autosave";
 const GF="praktikum-tracker-data.json";
 const STATUSES=["not_sent","sent","response","interview","accepted","rejected"];
 const SCOLS=["var(--s0)","var(--s1)","var(--s2)","var(--s3)","var(--s4)","var(--s5)"];
-const MODELS=[{id:"compound-beta-mini",s:true},{id:"llama-3.3-70b-versatile",s:false},{id:"llama-3.1-8b-instant",s:false}];
 const ACCENT_PRESETS={
   green:{hex:"#00d26a",labelKey:"themeGreen"},
   lime:{hex:"#c6ff00",labelKey:"themeLime"},
@@ -958,7 +957,7 @@ let themeMode=localStorage.getItem(SK_THEME_MODE)||"dark";
 let themeAccentId=localStorage.getItem(SK_THEME_ACCENT)||"green";
 let themeCustomHex=localStorage.getItem(SK_THEME_CUSTOM)||"#00d26a";
 let blueprint=[];
-let groqKey=localStorage.getItem(SK_GROQ)||"";
+let geminiKey=localStorage.getItem(SK_GEMINI)||"";
 let ghPat=localStorage.getItem(SK_PAT)||"";
 let gistId=localStorage.getItem(SK_GIST)||"";
 let syncTs=parseInt(localStorage.getItem(SK_STS)||"0");
@@ -1095,7 +1094,6 @@ function loadRl(){try{rlCache=JSON.parse(localStorage.getItem(SK_RL)||"{}");}cat
 function pReset(v){if(!v)return 0;if(v.endsWith("ms"))return parseFloat(v);if(v.endsWith("s"))return parseFloat(v)*1000;return parseFloat(v)*1000;}
 function utc(ms){if(!ms)return"?";return new Date(ms).toUTCString().slice(-12,-4);}
 function updRl(h){const l=parseInt(h.get("x-ratelimit-limit-requests")||"0")||0,r=parseInt(h.get("x-ratelimit-remaining-requests")||"0")||0,raw=h.get("x-ratelimit-reset-requests")||"";if(l||r){rlCache={l,r,resetAt:Date.now()+pReset(raw)};localStorage.setItem(SK_RL,JSON.stringify(rlCache));}renderRl();}
-function dayLimitHit(){const{r,l,resetAt}=rlCache;return!!(l&&r===0&&resetAt&&Date.now()<resetAt);}
 function renderRl(){
   const bar=document.getElementById("rlBar"),txt=document.getElementById("rlText");if(!bar||!txt)return;
   const{l,r,resetAt}=rlCache;if(!l){bar.hidden=true;return;}bar.hidden=false;const rt=utc(resetAt);
@@ -1120,9 +1118,9 @@ async function ghFetch(method,path,body){
   }finally{clearTimeout(timer);}
 }
 
-// Gist payload always includes groqKey so the key syncs too
+// Gist payload always includes the Gemini key so it syncs too
 function buildGistPayload(){
-  return{updatedAt:Date.now(),groqKey,companies,blueprint,blueprintTs:parseInt(localStorage.getItem(SK_BP_TS)||"0")};
+  return{updatedAt:Date.now(),geminiKey,companies,blueprint,blueprintTs:parseInt(localStorage.getItem(SK_BP_TS)||"0")};
 }
 
 // Merges two company lists by id: for ids present in both, keeps whichever
@@ -1165,8 +1163,8 @@ async function pullGist(){
     const data=await ghFetch("GET","gists/"+gistId);
     const raw=data.files?.[GF]?.content;if(!raw)throw new Error("no file");
     const p=JSON.parse(raw);
-    // Always update groqKey from gist (keeps keys in sync across devices)
-    if(p.groqKey&&p.groqKey!==groqKey){groqKey=p.groqKey;localStorage.setItem(SK_GROQ,groqKey);}
+    // Always update Gemini key from gist (keeps keys in sync across devices)
+    if(p.geminiKey&&p.geminiKey!==geminiKey){geminiKey=p.geminiKey;localStorage.setItem(SK_GEMINI,geminiKey);}
     // Sync blueprint — newer timestamp wins
     if(p.blueprint&&Array.isArray(p.blueprint)){
       const localTs=parseInt(localStorage.getItem(SK_BP_TS)||"0");
@@ -1193,7 +1191,7 @@ async function pullGist(){
   finally{_syncLock=false;}
 }
 
-// Returns {groqKey} from existing gist or null
+// Returns {geminiKey} from existing gist or null
 async function findExistingGist(pat){
   const tmp=ghPat;ghPat=pat;
   try{
@@ -1204,7 +1202,7 @@ async function findExistingGist(pat){
     const full=await ghFetch("GET","gists/"+gistId);
     const raw=full.files?.[GF]?.content;
     const p=raw?JSON.parse(raw):{};
-    return{groqKey:p.groqKey||"",companies:p.companies||[]};
+    return{geminiKey:p.geminiKey||"",companies:p.companies||[]};
   }catch(e){ghPat=tmp;throw e;}
 }
 
@@ -1214,7 +1212,7 @@ async function connectGist(pat){
   try{
     const found=await findExistingGist(pat);
     if(found){
-      if(found.groqKey){groqKey=found.groqKey;localStorage.setItem(SK_GROQ,groqKey);}
+      if(found.geminiKey){geminiKey=found.geminiKey;localStorage.setItem(SK_GEMINI,geminiKey);}
       companies=mergeCompanies(companies,found.companies||[]);
       localStorage.setItem(SK,JSON.stringify(companies));
       syncTs=Date.now();localStorage.setItem(SK_STS,syncTs);
@@ -1227,7 +1225,7 @@ async function connectGist(pat){
       syncTs=Date.now();localStorage.setItem(SK_STS,syncTs);
     }
     setSyncState("ok");renderSyncBar();renderSettings();
-    return{groqKey};
+    return{geminiKey};
   }catch(e){
     setSyncState("err",e.status===401?t("syncEPat"):e.message);
     ghPat="";gistId="";localStorage.removeItem(SK_PAT);localStorage.removeItem(SK_GIST);
@@ -1269,20 +1267,24 @@ function bPrompt(name,prof,loc){
     usr:`Company: "${name}".${loc?` Location: "${loc}".`:""}${prof?` Seeking "${prof}" internship contact.`:""}`
   };
 }
-async function callGroq(mid,name,prof,loc){
+function geminiJson(data){
+  const raw=data.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+  const m=raw.match(/\{[\s\S]*\}/);
+  if(!m)throw new Error("bad json");
+  return JSON.parse(m[0]);
+}
+async function callGemini(name,prof,loc){
   const{sys,usr}=bPrompt(name,prof,loc);
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),30000);
   try{
-    const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+    const r=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(geminiKey),{
       method:"POST",signal:ctrl.signal,
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
-      body:JSON.stringify({model:mid,messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.1,max_completion_tokens:280})});
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.1,maxOutputTokens:280}})});
     try{updRl(r.headers);}catch(e){}
     if(!r.ok){const e=await r.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,120)),{status:r.status});}
-    const d=await r.json();const raw=d.choices?.[0]?.message?.content||"";
-    const m=raw.match(/\{[\s\S]*?\}/);if(!m)throw new Error("bad json");
-    return JSON.parse(m[0]);
+    return geminiJson(await r.json());
   }catch(e){
     if(e.name==="AbortError")throw new Error(t("aiENet")+" (timeout)");
     throw e;
@@ -1296,10 +1298,7 @@ function aiErr(e){
   return t("aiEGen",{m:m.slice(0,60)});
 }
 async function aiFill(name,prof,loc){
-  if(dayLimitHit())throw Object.assign(new Error("limit"),{status:429});
-  let last;
-  for(const m of MODELS){try{return{r:await callGroq(m.id,name,prof,loc),s:m.s};}catch(e){last=e;if(e.status===401||e.status===403||e.status===429)throw e;}}
-  throw last;
+  return{r:await callGemini(name,prof,loc),s:true};
 }
 async function runAi(stEl,btn,name,prof,loc,apFn){
   if(!name.trim()){stEl.className="ai-st err";stEl.textContent="—";return;}
@@ -1385,7 +1384,7 @@ function renderSettings(){
   const ghBtn=document.getElementById("setGhBtn"),ghDis=document.getElementById("setGhDis");
   const syncRow=document.getElementById("setSyncNowRow");
   const ghStatus=document.getElementById("setGhStatus");
-  const groqStatus=document.getElementById("setGroqStatus");
+  const geminiStatus=document.getElementById("setGeminiStatus");
   const shareUrl=document.getElementById("setShareUrl");
 
   // GitHub status
@@ -1405,8 +1404,8 @@ function renderSettings(){
     else ghStatus.innerHTML=`<span style="color:var(--faint);font-size:11px;">${t("syncNone")}</span>`;
   }
 
-  // Groq key masked
-  if(groqStatus)groqStatus.textContent=groqKey?groqKey.slice(0,8)+"…"+groqKey.slice(-4):"—";
+  // Gemini key masked
+  if(geminiStatus)geminiStatus.textContent=geminiKey?geminiKey.slice(0,8)+"…"+geminiKey.slice(-4):"—";
 
   // Download page link
   const dlBase=window.location.href.includes("github.io")
@@ -1445,7 +1444,7 @@ function applyI18n(){
   si("lblAiLoc",t("aiLoc"));
   const fal=document.getElementById("fAiLoc");if(fal)fal.placeholder=t("aiLocPh");
   si("setTitle",t("setTitle"));si("setSecAcc",t("secAcc"));si("setSecSync",t("secSync"));si("setSecStore",t("secStore"));si("setSecBlueprint",t("secBlueprint"));
-  si("setLblGh",t("lGh"));si("setLblGroq",t("lGroq"));
+  si("setLblGh",t("lGh"));si("setLblGemini",t("lGemini"));
   si("setLblLang",t("lLang"));si("setLblAs",t("lAs"));si("setLblAsSub",t("lAsSub"));
   si("setSecTheme",t("secTheme"));si("setLblThemeMode",t("lThemeMode"));si("setLblThemeAccent",t("lThemeAccent"));
   si("themeDarkBtn",t("themeDark"));si("themeLightBtn",t("themeLight"));si("setLblCustomAccent",t("themeCustom"));
@@ -1699,18 +1698,18 @@ async function renderOb(){
       try{
         const result=await connectGist(v);
         lang=obLang;localStorage.setItem(SK_LANG,lang);
-        // If gist had a groqKey, skip step 2
-        if(result&&result.groqKey&&groqKey){obStep=3;}else{obStep=2;}
+        // If the gist had a Gemini key, skip step 2
+        if(result&&result.geminiKey&&geminiKey){obStep=3;}else{obStep=2;}
         renderOb();
       }catch(e){errEl.textContent=e.message||t("syncEPat");btn.disabled=false;infoEl.textContent="";}
     });
   }
   else if(obStep===2){
-    // Groq key step
+    // Gemini key step
     const i2=(I18N[obLang]||I18N.de).ob.i2||[];
-    const autoLoaded=groqKey&&ghPat;
+    const autoLoaded=geminiKey&&ghPat;
     body.innerHTML=`<h2>${ob("t2")}</h2>
-    ${autoLoaded?`<div class="ob-success"><b>${ob("autoLoaded")}</b>${groqKey.slice(0,8)}…</div>`:`<div class="ob-instr"><ol>${i2.map(s=>`<li>${s}</li>`).join("")}</ol></div>`}
+    ${autoLoaded?`<div class="ob-success"><b>${ob("autoLoaded")}</b>${geminiKey.slice(0,8)}…</div>`:`<div class="ob-instr"><ol>${i2.map(s=>`<li>${s}</li>`).join("")}</ol></div>`}
     ${!autoLoaded?`<div class="ob-field"><input type="password" id="obKey" placeholder="${ob("p2")}" autocomplete="off"><button type="button" class="btn-back" id="obKeyToggle" style="flex:none;padding:9px 12px;">👁</button></div><div class="ob-err" id="obKeyErr"></div>`:""}
     <div class="ob-footer">
       <button class="btn-back" id="obBack">${ob("back")}</button>
@@ -1728,7 +1727,7 @@ async function renderOb(){
       inp.addEventListener("input",()=>{nxt.disabled=inp.value.trim().length<10;document.getElementById("obKeyErr").textContent="";});
       nxt.addEventListener("click",()=>{
         const v=inp.value.trim();if(v.length<10){document.getElementById("obKeyErr").textContent="Invalid";return;}
-        groqKey=v;lang=obLang;localStorage.setItem(SK_GROQ,groqKey);localStorage.setItem(SK_LANG,lang);
+        geminiKey=v;lang=obLang;localStorage.setItem(SK_GEMINI,geminiKey);localStorage.setItem(SK_LANG,lang);
         // If github connected, push key to gist
         if(ghPat&&gistId)pushGist();
         obStep=3;renderOb();
@@ -1964,9 +1963,9 @@ function wireEvents(){
     if(pat&&pat.trim().length>5){try{await connectGist(pat.trim());render();}catch(e){alert(e.message);}}
   });
   document.getElementById("setGhDis").addEventListener("click",()=>{if(confirm(t("cancelQ")))disconnectGist();});
-  document.getElementById("setGroqBtn").addEventListener("click",()=>{
-    const k=prompt(t("groqPrompt"),groqKey);
-    if(k&&k.trim().length>5){groqKey=k.trim();localStorage.setItem(SK_GROQ,groqKey);if(ghPat&&gistId)pushGist();}
+  document.getElementById("setGeminiBtn").addEventListener("click",()=>{
+    const k=prompt(t("geminiPrompt"),geminiKey);
+    if(k&&k.trim().length>5){geminiKey=k.trim();localStorage.setItem(SK_GEMINI,geminiKey);if(ghPat&&gistId)pushGist();}
   });
   document.getElementById("setSyncNowBtn").addEventListener("click",()=>pullGist());
 
@@ -2139,17 +2138,14 @@ If a company has annual deadlines and the ${year} deadline has already passed, r
 Return ONLY valid JSON no markdown: {"openDate":"YYYY-MM-DD","deadline":"YYYY-MM-DD","notes":"","confidence":"high|medium|low"}
 Use empty string if genuinely not found or unknown. Never invent dates — if unsure use empty string.`;
   const usr=`Company: "${name}", Austria.${prof?` Profession: "${prof}".`:""} Find UPCOMING (future) dates: when applications OPEN (Bewerbungsstart) and the DEADLINE (Bewerbungsschluss/Einsendeschluss) for Ferialpraktikum/internship. Today: ${nowStr}.`;
-  const res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+  const res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(geminiKey),{
     method:"POST",
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
-    body:JSON.stringify({model:"compound-beta-mini",messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.1,max_completion_tokens:200})
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.1,maxOutputTokens:200}})
   });
   try{updRl(res.headers);}catch(e){}
   if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
-  const d=await res.json();
-  const raw=d.choices?.[0]?.message?.content||"";
-  const m=raw.match(/\{[\s\S]*?\}/);if(!m)throw new Error("bad json");
-  const result=JSON.parse(m[0]);
+  const result=geminiJson(await res.json());
   // Post-process: if date is in the past, try shifting it one year forward
   function shiftIfPast(iso){
     if(!iso)return iso;
@@ -2199,17 +2195,17 @@ function locationMatches(address, loc){
   return locWords.some(w=>addrLower.includes(w));
 }
 
-async function callGroqDisc(prof,loc,page){
+async function callGeminiDisc(prof,loc,page){
   const exclude=companies.map(c=>c.name);
   const{sys,usr}=buildDiscPrompt(prof,loc,exclude,page);
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),45000);
   let res;
   try{
-    res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+    res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key="+encodeURIComponent(geminiKey),{
       method:"POST",signal:ctrl.signal,
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+groqKey},
-      body:JSON.stringify({model:"compound-beta-mini",messages:[{role:"system",content:sys},{role:"user",content:usr}],temperature:.3,max_completion_tokens:700})
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({systemInstruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:usr}]}],tools:[{google_search:{}}],generationConfig:{temperature:.3,maxOutputTokens:700}})
     });
   }catch(e){
     if(e.name==="AbortError")throw new Error(t("discErrNet")+" (timeout)");
@@ -2217,9 +2213,9 @@ async function callGroqDisc(prof,loc,page){
   }finally{clearTimeout(timer);}
   try{updRl(res.headers);}catch(e){}
   if(!res.ok){const e=await res.text().catch(()=>"");throw Object.assign(new Error(e.slice(0,100)),{status:res.status});}
-  const d=await res.json();
-  const raw=d.choices?.[0]?.message?.content||"";
-  const m=raw.match(/\[[\s\S]*\]/);
+  const raw=await res.json();
+  const text=raw.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
+  const m=text.match(/\[[\s\S]*\]/);
   if(!m)throw new Error("bad json");
   const arr=JSON.parse(m[0]);
   if(!Array.isArray(arr))throw new Error("not array");
@@ -2283,7 +2279,7 @@ async function runDiscovery(loadMore=false){
   document.getElementById("discFooter").hidden=false;
   moreBtn.hidden=true;
   try{
-    const results=await callGroqDisc(discProf,discLoc,discPage);
+    const results=await callGeminiDisc(discProf,discLoc,discPage);
     if(!results.length&&!discAllResults.length){
       statusEl.className="disc-status";statusEl.textContent=t("discEmpty");
     }else{
@@ -2493,7 +2489,7 @@ if(themeMode!=="dark"&&themeMode!=="light")themeMode="dark";
 if(!ACCENT_PRESETS[themeAccentId]&&themeAccentId!=="custom")themeAccentId="green";
 applyTheme();
 initPWA();
-if(!groqKey){renderOb();}
+if(!geminiKey){renderOb();}
 else{document.getElementById("onboarding").hidden=true;document.getElementById("mainApp").hidden=false;initApp();}
 </script>
 </body>

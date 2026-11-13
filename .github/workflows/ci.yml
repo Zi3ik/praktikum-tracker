@@ -67,8 +67,8 @@ jobs:
           if (!html.includes('Content-Security-Policy')) issues.push('CSP missing');
           if (!html.includes('frame-ancestors')) issues.push('frame-ancestors missing from CSP');
 
-          // No hardcoded secrets (gsk_ = Groq key, ghp_ = GitHub PAT)
-          if (/gsk_[A-Za-z0-9]{20}/.test(html)) issues.push('Possible hardcoded Groq API key');
+          // No hardcoded secrets (AIza = Gemini key, ghp_ = GitHub PAT)
+          if (/AIza[0-9A-Za-z_-]{20,}/.test(html)) issues.push('Possible hardcoded Gemini API key');
           if (/ghp_[A-Za-z0-9]{20}/.test(html)) issues.push('Possible hardcoded GitHub PAT');
           if (/github_pat_[A-Za-z0-9]/.test(html)) issues.push('Possible hardcoded GitHub PAT (fine-grained)');
 
