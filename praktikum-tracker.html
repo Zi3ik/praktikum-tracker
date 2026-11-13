@@ -1060,6 +1060,9 @@ function safeEmail(raw){
   const s=raw.trim().slice(0,200);
   return/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)?s:"";
 }
+function isGeminiKey(raw){
+  return typeof raw==="string"&&raw.length>=20&&!/\s/.test(raw)&&!raw.includes("...");
+}
 
 // ── Storage ───────────────────────────────────────────────
 function loadC(){
@@ -1728,9 +1731,9 @@ async function renderOb(){
         inp.type=isHidden?"text":"password";
         document.getElementById("obKeyToggle").textContent=isHidden?"🙈":"👁";
       });
-      inp.addEventListener("input",()=>{nxt.disabled=inp.value.trim().length<10;document.getElementById("obKeyErr").textContent="";});
+      inp.addEventListener("input",()=>{nxt.disabled=!isGeminiKey(inp.value.trim());document.getElementById("obKeyErr").textContent="";});
       nxt.addEventListener("click",()=>{
-        const v=inp.value.trim();if(v.length<10){document.getElementById("obKeyErr").textContent="Invalid";return;}
+        const v=inp.value.trim();if(!isGeminiKey(v)){document.getElementById("obKeyErr").textContent="Invalid Gemini API key";return;}
         geminiKey=v;lang=obLang;localStorage.setItem(SK_GEMINI,geminiKey);localStorage.setItem(SK_LANG,lang);
         // If github connected, push key to gist
         if(ghPat&&gistId)pushGist();
@@ -1969,7 +1972,7 @@ function wireEvents(){
   document.getElementById("setGhDis").addEventListener("click",()=>{if(confirm(t("cancelQ")))disconnectGist();});
   document.getElementById("setGeminiBtn").addEventListener("click",()=>{
     const k=prompt(t("geminiPrompt"),geminiKey);
-    if(k&&k.trim().length>5){geminiKey=k.trim();localStorage.setItem(SK_GEMINI,geminiKey);if(ghPat&&gistId)pushGist();}
+    if(k&&isGeminiKey(k.trim())){geminiKey=k.trim();localStorage.setItem(SK_GEMINI,geminiKey);if(ghPat&&gistId)pushGist();}
   });
   document.getElementById("setSyncNowBtn").addEventListener("click",()=>pullGist());
 
