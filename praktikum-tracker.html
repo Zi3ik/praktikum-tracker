@@ -671,7 +671,7 @@ de:{
   aiFill:"KI-Daten suchen",aiDisc:"KI kann sich irren — bitte prüfen.",
   aiLoc:"📍 Suchort für KI (optional)",aiLocPh:"z.B. Wien, Zürich, München — leer = überall",
   aiLoad:"Suche…",aiOk:"Fertig (Websuche).",aiOkN:"Fertig (ohne Live-Suche).",
-  aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiENet:"Keine Verbindung zu Gemini.",
+  aiE429:"Tageslimit. Wieder ab {{r}} UTC.",aiE429NoTime:"Tageslimit erreicht. Bitte später erneut versuchen.",aiENet:"Keine Verbindung zu Gemini.",
   aiEKey:"Ungültiger Gemini-API-Schlüssel (401).",aiEAccess:"Gemini-Zugriff verweigert (403). Prüfe API-Einschränkungen und das Gemini-Projekt.",aiEGen:"Fehler: {{m}}",
   cancel:"Abbrechen",cancelQ:"Ohne Speichern schließen?",
   saveC:"Änderungen speichern",delQ:"Firma löschen?",
@@ -770,7 +770,7 @@ ru:{
   aiFill:"Найти через ИИ",aiDisc:"ИИ может ошибаться — проверяй.",
   aiLoc:"📍 Место поиска для ИИ (необязательно)",aiLocPh:"напр. Wien, Zürich, München — пусто = везде",
   aiLoad:"Ищу…",aiOk:"Готово (веб-поиск).",aiOkN:"Готово (без поиска).",
-  aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiENet:"Нет связи с Gemini.",
+  aiE429:"Лимит исчерпан. Снова с {{r}} UTC.",aiE429NoTime:"Лимит исчерпан. Попробуй позже.",aiENet:"Нет связи с Gemini.",
   aiEKey:"Неверный Gemini API-ключ (401).",aiEAQ:"Google отклонил ключ формата AQ. Создай новый ключ в Google AI Studio или попробуй позже.",aiEAccess:"Gemini запретил доступ (403). Проверь ограничения API-ключа и проект Gemini.",aiEGen:"Ошибка: {{m}}",
   cancel:"Отмена",cancelQ:"Закрыть без сохранения?",
   saveC:"Сохранить изменения",delQ:"Удалить компанию?",
@@ -869,7 +869,7 @@ en:{
   aiFill:"Find data with AI",aiDisc:"AI may make mistakes — always verify.",
   aiLoc:"📍 Search location for AI (optional)",aiLocPh:"e.g. Wien, Zürich, Munich — blank = anywhere",
   aiLoad:"Searching…",aiOk:"Done (web search).",aiOkN:"Done (no web search).",
-  aiE429:"Daily limit reached. Again at {{r}} UTC.",aiENet:"Cannot connect to Gemini.",
+  aiE429:"Daily limit reached. Again at {{r}} UTC.",aiE429NoTime:"Daily limit reached. Please try again later.",aiENet:"Cannot connect to Gemini.",
   aiEKey:"Invalid Gemini API key (401).",aiEAQ:"Google rejected this AQ. key. Create a new key in Google AI Studio or try again later.",aiEAccess:"Gemini access denied (403). Check API key restrictions and the Gemini project.",aiEGen:"Error: {{m}}",
   cancel:"Cancel",cancelQ:"Close without saving?",
   saveC:"Save changes",delQ:"Delete this company?",
@@ -1099,6 +1099,13 @@ function saveBlueprint(){
 function loadRl(){try{rlCache=JSON.parse(localStorage.getItem(SK_RL)||"{}");}catch(e){rlCache={};}}
 function pReset(v){if(!v)return 0;if(v.endsWith("ms"))return parseFloat(v);if(v.endsWith("s"))return parseFloat(v)*1000;return parseFloat(v)*1000;}
 function utc(ms){if(!ms)return"?";return new Date(ms).toUTCString().slice(-12,-4);}
+function retryAt(message){
+  try{
+    const data=JSON.parse(message);
+    const delay=data.error?.details?.find(d=>d.retryDelay)?.retryDelay;
+    return delay?Date.now()+pReset(delay):0;
+  }catch(_){return 0;}
+}
 function updRl(h){const l=parseInt(h.get("x-ratelimit-limit-requests")||"0")||0,r=parseInt(h.get("x-ratelimit-remaining-requests")||"0")||0,raw=h.get("x-ratelimit-reset-requests")||"";if(l||r){rlCache={l,r,resetAt:Date.now()+pReset(raw)};localStorage.setItem(SK_RL,JSON.stringify(rlCache));}renderRl();}
 function renderRl(){
   const bar=document.getElementById("rlBar"),txt=document.getElementById("rlText");if(!bar||!txt)return;
@@ -1310,7 +1317,7 @@ async function callGemini(name,prof,loc){
     if(!r.ok){
       const e=await r.text().catch(()=>"");
       geminiLog("error",{phase:"contact",status:r.status,apiError:apiErrorDetail(e),response:e.slice(0,500)});
-      throw Object.assign(new Error(e.slice(0,500)),{status:r.status});
+      throw Object.assign(new Error(e.slice(0,500)),{status:r.status,retryAt:retryAt(e)});
     }
     return geminiJson(await r.json());
   }catch(e){
@@ -1332,7 +1339,10 @@ function apiErrorReason(message){
 }
 function aiErr(e){
   const s=e.status,m=e.message||"";
-  if(s===429||m.includes("429"))return t("aiE429",{r:utc(rlCache.resetAt)});
+  if(s===429||m.includes("429")){
+    const reset=utc(e.retryAt||rlCache.resetAt);
+    return reset==="?"?t("aiE429NoTime"):t("aiE429",{r:reset});
+  }
   if(s===401){
     if(apiErrorReason(m)==="ACCESS_TOKEN_TYPE_UNSUPPORTED")return t("aiEAQ");
     const d=apiErrorDetail(m);return t("aiEKey")+(d?" "+d:"");
@@ -2190,7 +2200,7 @@ Use empty string if genuinely not found or unknown. Never invent dates — if un
   if(!res.ok){
     const e=await res.text().catch(()=>"");
     geminiLog("error",{phase:"dates",status:res.status,apiError:apiErrorDetail(e),response:e.slice(0,500)});
-    throw Object.assign(new Error(e.slice(0,500)),{status:res.status});
+    throw Object.assign(new Error(e.slice(0,500)),{status:res.status,retryAt:retryAt(e)});
   }
   const result=geminiJson(await res.json());
   // Post-process: if date is in the past, try shifting it one year forward
@@ -2264,7 +2274,7 @@ async function callGeminiDisc(prof,loc,page){
   if(!res.ok){
     const e=await res.text().catch(()=>"");
     geminiLog("error",{phase:"discovery",status:res.status,apiError:apiErrorDetail(e),response:e.slice(0,500)});
-    throw Object.assign(new Error(e.slice(0,500)),{status:res.status});
+    throw Object.assign(new Error(e.slice(0,500)),{status:res.status,retryAt:retryAt(e)});
   }
   const raw=await res.json();
   const text=raw.candidates?.[0]?.content?.parts?.map(p=>p.text||"").join("")||"";
@@ -2284,8 +2294,9 @@ function discErrMsg(e){
   }
   if(e.status===403){const d=apiErrorDetail(e.message||"");return t("discErrAccess")+(d?" "+d:"");}
   if(e.status===429||e.message?.includes("429")||e.message?.includes("Rate limit")||e.message?.includes("rate_limit")){
-    const reset=utcStr(rlCache.resetAt);
-    return t("aiE429",{r:reset})+" "+{"de":"«Ещё» wird nach dem Reset wieder funktionieren.","ru":"Кнопка «Ещё» снова заработает после сброса.","en":"The «More» button will work again after reset."}[lang];
+    const reset=utc(e.retryAt||rlCache.resetAt);
+    const wait=reset==="?"?t("aiE429NoTime"):t("aiE429",{r:reset});
+    return wait+" "+{"de":"«Ещё» wird später wieder funktionieren.","ru":"Кнопка «Ещё» заработает позже.","en":"The «More» button will work later."}[lang];
   }
   if(e.message?.includes("Failed to fetch")||e.message?.includes("NetworkError"))return t("discErrNet");
   return t("discErrGen",{m:(e.message||"").slice(0,60)});
